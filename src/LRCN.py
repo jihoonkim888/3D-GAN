@@ -7,7 +7,7 @@ from torch.distributions import Categorical
 
 
 class LRCN(nn.Module):
-    def __init__(self, in_channels=1, input_dim=32, output_dim=128, in_conv_channels=64, out_conv_channels=64, dropout_prob=0.5):
+    def __init__(self, in_channels=1, input_dim=32, output_dim=128, in_conv_channels=256, out_conv_channels=64, latent_size=200, dropout_prob=0.5):
         super().__init__()
         img_feat_size = input_dim
         input_size = input_dim
@@ -39,18 +39,19 @@ class LRCN(nn.Module):
             nn.LeakyReLU(0.2, inplace=True)
         )
 
-        self.in_conv4 = nn.Sequential(
-            nn.Conv3d(in_channels=in_conv3_channels, out_channels=in_conv_channels,
-                      kernel_size=5, stride=2, padding=1, bias=False),
-            nn.BatchNorm3d(in_conv_channels),
-            nn.LeakyReLU(0.2, inplace=True)
-        )
+        # self.in_conv4 = nn.Sequential(
+        #     nn.Conv3d(in_channels=in_conv3_channels, out_channels=in_conv_channels,
+        #               kernel_size=5, stride=2, padding=1, bias=False),
+        #     nn.BatchNorm3d(in_conv_channels),
+        #     nn.LeakyReLU(0.2, inplace=True)
+        # )
 
         # self.last_layer_size = (input_dim//8)**3 * in_conv_channels
         self.last_layer_size = 128
-        self.fc1 = nn.Linear(self.last_layer_size, 200)
+        self.fc1 = nn.Linear(self.last_layer_size, latent_size)
 
         # # LSTM
+        # self.lstm = nn.LSTM(input_size=latent_size, batch_first=True)
         # self.linear1 = nn.Linear(img_feat_size, hidden_size)
         # self.lstm1 = nn.LSTM(lstm1_input_size, hidden_size, batch_first=True)
         # self.lstm2 = nn.LSTM(lstm2_input_size, hidden_size, batch_first=True)
@@ -71,12 +72,15 @@ class LRCN(nn.Module):
     #     self.linear2.bias.data.fill_(0)
 
     def forward(self, x):
+        # 3D-CNN
         x = self.in_conv1(x)
         x = self.in_conv2(x)
         x = self.in_conv3(x)
-        x = self.in_conv4(x)
+        # x = self.in_conv4(x)
         x = x.view(-1, self.last_layer_size)
         x = self.fc1(x)
+
+        # LSTM
 
     #     if feat_func is None:
     #         def feat_func(x): return x

@@ -124,66 +124,34 @@ class LRCN(nn.Module):
     #     '''
     #     return
 
-    # def generate_sentence(self, image_inputs, start_word, end_word, states=(None, None),
-    #                       max_sampling_length=50, sample=False, feat_func=None):
-    #     if feat_func is None:
-    #         def feat_func(x): return x
 
-    #     sampled_ids = []
-    #     if self.has_vision_model:
-    #         image_features = self.vision_model(image_inputs)
-    #     else:
-    #         image_features = image_inputs
-    #     image_features = self.linear1(image_features)
-    #     image_features = F.relu(image_features)
-    #     image_features = feat_func(image_features)
-    #     image_features = image_features.unsqueeze(1)
+def slice(x_3d, c=5):
+    '''
+    input: torch tensor of complete 3D model
+    output: a list of parsed tensors with c
+    '''
+    lst = []
+    i_start_to_pad = int((c-1)/2)
+    i_end_to_pad = x_3d.shape[0] - int((c-1)/2) - 1  # 32-2-1 = 29
+    for i in range(x_3d.shape[0]):
+        start = int(i-((c-1)/2))
+        start = start if start > 0 else 0
+        end = int(i+((c+1)/2))
+        print('start:', start, 'end:', end)
+        # x_s = torch.narrow(x_3d, -1, start, c)   # c slices of model
+        x_s = x_3d[:, :, start:end]
+        if i < i_start_to_pad:
+            num_pad = i_start_to_pad - i
+            x_s = F.pad(x_s, (num_pad, 0, 0, 0, 0, 0),
+                        mode='constant', value=0)
+        elif i > i_end_to_pad:  # i larger than 29, so 30 and 31
+            num_pad = i - i_end_to_pad
+            x_s = F.pad(x_s, (0, num_pad, 0, 0, 0, 0),
+                        mode='constant', value=0)
+        print(x_s.shape)
+        lst.append(x_s)
 
-    #     embedded_word = self.word_embed(start_word)
-    #     embedded_word = embedded_word.expand(image_features.size(0), -1, -1)
-
-    #     lstm1_states, lstm2_states = states
-
-    #     end_word = end_word.squeeze().expand(image_features.size(0))
-    #     reached_end = torch.zeros_like(end_word.data).byte()
-
-    #     if sample:
-    #         log_probabilities = []
-    #         lengths = torch.zeros_like(reached_end).long()
-
-    #     i = 0
-    #     while not reached_end.all() and i < max_sampling_length:
-    #         lstm1_input = embedded_word
-
-    #         # LSTM 1
-    #         lstm1_output, lstm1_states = self.lstm1(lstm1_input, lstm1_states)
-
-    #         lstm1_output = torch.cat((image_features, lstm1_output), 2)
-
-    #         # LSTM 2
-    #         lstm2_output, lstm2_states = self.lstm2(lstm1_output, lstm2_states)
-
-    #         outputs = self.linear2(lstm2_output.squeeze(1))
-    #         if sample:
-    #             predicted, log_p = self.sample(outputs)
-    #             active_batches = (~reached_end)
-    #             log_p *= active_batches.float().to(log_p.device)
-    #             log_probabilities.append(log_p.unsqueeze(1))
-    #             lengths += active_batches.long()
-    #         else:
-    #             predicted = outputs.max(1)[1]
-    #         reached_end = reached_end | predicted.eq(end_word).data
-    #         sampled_ids.append(predicted.unsqueeze(1))
-    #         embedded_word = self.word_embed(predicted)
-    #         embedded_word = embedded_word.unsqueeze(1)
-
-    #         i += 1
-
-    #     sampled_ids = torch.cat(sampled_ids, 1).squeeze()
-    #     if sample:
-    #         log_probabilities = torch.cat(log_probabilities, 1).squeeze()
-    #         return sampled_ids, log_probabilities, lengths
-    #     return sampled_ids
+    return lst
 
 
 def weights_init(m):
@@ -193,3 +161,24 @@ def weights_init(m):
     elif classname.find('BatchNorm') != -1:
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
+
+
+def calculate_input_size_conv2d(output_size, padding, dilation, kernel_size, stride):
+    # equation got from conv2d torch website
+    return (output_size - 1) * stride + 1 + dilation * (kernel_size+1) - 2 * padding
+
+
+def calculate_input_size_convtranspose2d(output_size, padding, dilation, kernel_size, stride, output_padding=0):
+    # equation got from conv2d torch website
+    return (output_size-1-output_padding-dilation*(kernel_size-1)+2*padding) / stride + 1
+
+# x_3d = torch.randn((32, 32, 32))
+# print(x_3d)
+# slices = slice(x_3d, c=5)
+# print(slices[0])
+
+
+# print(calculate_input_size_convtranspose2d(output_size=128,
+#       padding=1, dilation=1, kernel_size=5, stride=2))
+# print(calculate_input_size_convtranspose2d(output_size=64,
+#                                            padding=1, dilation=1, kernel_size=5, stride=2))

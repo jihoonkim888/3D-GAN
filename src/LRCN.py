@@ -1,3 +1,4 @@
+from dataclasses import replace
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,115 +8,115 @@ from torch.distributions import Categorical
 
 
 class LRCN(nn.Module):
-    def __init__(self, in_channels=1, input_dim=32, output_dim=128, in_conv_channels=256, out_conv_channels=64, latent_size=200, dropout_prob=0.5):
+    def __init__(self, in_channels=1, input_dim=64, output_dim=128, c=5, in_conv_channels=256, out_conv_channels=256, kernel_size=3, latent_size=200, hidden_size=100):
         super().__init__()
-        img_feat_size = input_dim
-        input_size = input_dim
+        self.in_channels = in_channels
+        self.out_conv_channels = out_conv_channels
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.latent_size = latent_size
+        self.hidden_size = hidden_size
+        self.c = c
 
         # 3D-GAN (encoder of 3D-ED-GAN)
-        in_conv1_channels = int(in_conv_channels / 8)
-        in_conv2_channels = int(in_conv_channels / 4)
-        in_conv3_channels = int(in_conv_channels / 2)
+        in_conv1_channels = int(in_conv_channels / 4)
+        in_conv2_channels = int(in_conv_channels / 2)
+        in_conv3_channels = in_conv_channels
         self.in_conv_channels = in_conv_channels
 
         self.in_conv1 = nn.Sequential(
             nn.Conv3d(in_channels=in_channels, out_channels=in_conv1_channels,
-                      kernel_size=5, stride=2, padding=1, bias=False),
+                      kernel_size=kernel_size, stride=2, padding=1, bias=False),
             nn.BatchNorm3d(in_conv1_channels),
             nn.LeakyReLU(0.2, inplace=True)
         )
 
         self.in_conv2 = nn.Sequential(
             nn.Conv3d(in_channels=in_conv1_channels, out_channels=in_conv2_channels,
-                      kernel_size=5, stride=2, padding=1, bias=False),
+                      kernel_size=kernel_size, stride=2, padding=1, bias=False),
             nn.BatchNorm3d(in_conv2_channels),
             nn.LeakyReLU(0.2, inplace=True)
         )
 
         self.in_conv3 = nn.Sequential(
             nn.Conv3d(in_channels=in_conv2_channels, out_channels=in_conv3_channels,
-                      kernel_size=5, stride=2, padding=1, bias=False),
+                      kernel_size=kernel_size, stride=2, padding=1, bias=False),
             nn.BatchNorm3d(in_conv3_channels),
             nn.LeakyReLU(0.2, inplace=True)
         )
 
-        # self.in_conv4 = nn.Sequential(
-        #     nn.Conv3d(in_channels=in_conv3_channels, out_channels=in_conv_channels,
-        #               kernel_size=5, stride=2, padding=1, bias=False),
-        #     nn.BatchNorm3d(in_conv_channels),
-        #     nn.LeakyReLU(0.2, inplace=True)
-        # )
-
         # self.last_layer_size = (input_dim//8)**3 * in_conv_channels
-        self.last_layer_size = 128
-        self.fc1 = nn.Linear(self.last_layer_size, latent_size)
-
-        # # LSTM
-        # self.lstm = nn.LSTM(input_size=latent_size, batch_first=True)
-        # self.linear1 = nn.Linear(img_feat_size, hidden_size)
-        # self.lstm1 = nn.LSTM(lstm1_input_size, hidden_size, batch_first=True)
-        # self.lstm2 = nn.LSTM(lstm2_input_size, hidden_size, batch_first=True)
-        # self.linear2 = nn.Linear(hidden_size, vocab_size)
-        # self.init_weights()
-
-        # self.input_size = (input_size, vocab_size)
-        # self.output_size = vocab_size
-        # self.dropout_prob = dropout_prob
-
-        # # 2D FC GAN
-
-    # def init_weights(self):
-    #     self.word_embed.weight.data.uniform_(-0.1, 0.1)
-    #     self.linear1.weight.data.uniform_(-0.1, 0.1)
-    #     self.linear1.bias.data.fill_(0)
-    #     self.linear2.weight.data.uniform_(-0.1, 0.1)
-    #     self.linear2.bias.data.fill_(0)
-
-    def forward(self, x):
-        # 3D-CNN
-        x = self.in_conv1(x)
-        x = self.in_conv2(x)
-        x = self.in_conv3(x)
-        # x = self.in_conv4(x)
-        x = x.view(-1, self.last_layer_size)
-        x = self.fc1(x)
+        # self.last_layer_size = 256 * 8 * 8
+        self.fc1 = nn.Linear(in_features=in_conv_channels *
+                             input_dim, out_features=latent_size)
 
         # LSTM
+        self.lstm = nn.LSTM(input_size=latent_size,
+                            hidden_size=hidden_size,
+                            batch_first=True
+                            )
 
-    #     if feat_func is None:
-    #         def feat_func(x): return x
+        # 2D CNN, two fully convolutional layers of kernel size 5 and stride 2, with batch norm and relu in between followed by tanh at the end
+        in_dim = int(output_dim / 4)
+        self.in_dim = in_dim
+        out_conv1_channels = int(out_conv_channels / 2)
 
-    #     embeddings = self.word_embed(captions)
-    #     embeddings = F.dropout(
-    #         embeddings, p=self.dropout_prob, training=self.training)
+        self.linear = torch.nn.Linear(
+            hidden_size, out_conv_channels * in_dim * in_dim)
 
-    #     if self.has_vision_model:
-    #         image_features = self.vision_model(image_inputs)
-    #     else:
-    #         image_features = image_inputs
-    #     image_features = self.linear1(image_features)
-    #     image_features = F.relu(image_features)
-    #     image_features = F.dropout(
-    #         image_features, p=self.dropout_prob, training=self.training)
-    #     image_features = feat_func(image_features)
-    #     image_features = image_features.unsqueeze(1)
-    #     image_features = image_features.expand(-1, embeddings.size(1), -1)
+        self.out_conv1 = nn.Sequential(
+            nn.ConvTranspose2d(in_channels=out_conv_channels,
+                               out_channels=out_conv1_channels,
+                               kernel_size=4,
+                               stride=2,
+                               padding=1,
+                               bias=False,
+                               ),
+            nn.BatchNorm2d(out_conv1_channels),
+            nn.LeakyReLU(0.2, inplace=True)
+        )
 
-    #     packed = pack_padded_sequence(embeddings, lengths, batch_first=True)
-    #     hiddens, _ = self.lstm1(packed)
-    #     unpacked_hiddens, new_lengths = pad_packed_sequence(
-    #         hiddens, batch_first=True)
-    #     unpacked_hiddens = torch.cat((image_features, unpacked_hiddens), 2)
-    #     unpacked_hiddens = F.dropout(
-    #         unpacked_hiddens, p=self.dropout_prob, training=self.training)
-    #     packed_hiddens = pack_padded_sequence(unpacked_hiddens, lengths,
-    #                                           batch_first=True)
-    #     hiddens, _ = self.lstm2(packed_hiddens)
+        self.out_conv2 = nn.Sequential(
+            nn.ConvTranspose2d(in_channels=out_conv1_channels,
+                               out_channels=1,
+                               kernel_size=4,
+                               stride=2,
+                               padding=1,
+                               bias=False,
+                               ),
+            nn.Tanh()
+            # nn.BatchNorm2d(out_conv2_channels),
+            # nn.LeakyReLU(0.2, inplace=True)
+        )
 
-    #     hiddens = F.dropout(
-    #         hiddens[0], p=self.dropout_prob, training=self.training)
-    #     outputs = self.linear2(hiddens)
-    #     return outputs
+    def forward(self, x_input):
+        hidden = None
+        lst_x = []
+        # iterate through input model
+        for t in range(x_input.size(1)):
+            x = torch.reshape(x_input[:, t, :, :, :],
+                              (-1, 1, self.input_dim, self.input_dim, 5))
+            # 3D-CNN
+            x = self.in_conv1(x)
+            x = self.in_conv2(x)
+            x = self.in_conv3(x)
+            x = x.view(1, -1)
+            x = self.fc1(x)
+
+            # LSTM
+            x, hidden = self.lstm(x, hidden)
+
+            # 2D-CNN
+            x = self.linear(x)
+            x = x.view(-1, self.out_conv_channels,
+                       self.in_dim, self.in_dim)
+            x = self.out_conv1(x)
+            x = self.out_conv2(x)
+
+            lst_x.append(x)
+
+        # x_ret = torch.stack(lst_x)
+        # return x_ret
 
     # def pca(self):
     #     '''
@@ -183,3 +184,12 @@ class LRCN(nn.Module):
     #         log_probabilities = torch.cat(log_probabilities, 1).squeeze()
     #         return sampled_ids, log_probabilities, lengths
     #     return sampled_ids
+
+
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.normal_(m.weight.data, 0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0)

@@ -11,6 +11,7 @@ class LRCN(nn.Module):
     def __init__(self, in_channels=1, input_dim=64, output_dim=128, c=5, in_conv_channels=256, out_conv_channels=256, kernel_size=3, latent_size=200, hidden_size=100):
         super().__init__()
         self.in_channels = in_channels
+        self.in_conv_channels = in_conv_channels
         self.out_conv_channels = out_conv_channels
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -21,8 +22,7 @@ class LRCN(nn.Module):
         # 3D-GAN (encoder of 3D-ED-GAN)
         in_conv1_channels = int(in_conv_channels / 4)
         in_conv2_channels = int(in_conv_channels / 2)
-        in_conv3_channels = in_conv_channels
-        self.in_conv_channels = in_conv_channels
+        in_conv3_channels = int(in_conv_channels)
 
         self.in_conv1 = nn.Sequential(
             nn.Conv3d(in_channels=in_channels, out_channels=in_conv1_channels,
@@ -45,10 +45,17 @@ class LRCN(nn.Module):
             nn.LeakyReLU(0.2, inplace=True)
         )
 
+        # self.in_conv4 = nn.Sequential(
+        #     nn.Conv3d(in_channels=in_conv3_channels, out_channels=in_conv4_channels,
+        #               kernel_size=kernel_size, stride=2, padding=1, bias=False),
+        #     nn.BatchNorm3d(in_conv4_channels),
+        #     nn.LeakyReLU(0.2, inplace=True)
+        # )
+
         # self.last_layer_size = (input_dim//8)**3 * in_conv_channels
         # self.last_layer_size = 256 * 8 * 8
-        self.fc1 = nn.Linear(in_features=in_conv_channels *
-                             input_dim, out_features=latent_size)
+        self.fc1 = nn.Linear(in_features=int(
+            in_conv_channels*input_dim), out_features=latent_size)
 
         # LSTM
         self.lstm = nn.LSTM(input_size=latent_size,
@@ -76,9 +83,11 @@ class LRCN(nn.Module):
             nn.LeakyReLU(0.2, inplace=True)
         )
 
+        scale = int(output_dim / input_dim)
+
         self.out_conv2 = nn.Sequential(
             nn.ConvTranspose2d(in_channels=out_conv1_channels,
-                               out_channels=1,
+                               out_channels=scale,
                                kernel_size=4,
                                stride=2,
                                padding=1,
@@ -90,33 +99,59 @@ class LRCN(nn.Module):
         )
 
     def forward(self, x_input):
+        '''
+        x_input: 5D tensor, size of (batch, channel, depth, height, width)
+        c: number of slices to input for each LRCN
+        '''
         hidden = None
         lst_x = []
-        # iterate through input model
-        for t in range(x_input.size(1)):
-            x = torch.reshape(x_input[:, t, :, :, :],
-                              (-1, 1, self.input_dim, self.input_dim, 5))
-            # 3D-CNN
-            x = self.in_conv1(x)
-            x = self.in_conv2(x)
-            x = self.in_conv3(x)
-            x = x.view(1, -1)
-            x = self.fc1(x)
+        lst_slices = []
 
-            # LSTM
-            x, hidden = self.lstm(x, hidden)
+        # slice per batch
+        for b in range(x_input.size(0)):
+            x = x_input[b][0]  # 5D to 3D
+            x = self.slice_model(x)
+            lst_slices.append(x)
 
-            # 2D-CNN
-            x = self.linear(x)
-            x = x.view(-1, self.out_conv_channels,
-                       self.in_dim, self.in_dim)
-            x = self.out_conv1(x)
-            x = self.out_conv2(x)
+        # # iterate through input model
+        # for t in range(x_input.size(1)):
+        #     x = torch.reshape(x_input[:, t, :, :, :],
+        #                       (-1, self.in_channels, self.input_dim, self.input_dim, self.c))
 
-            lst_x.append(x)
+        for slices in lst_slices:
+            lst_x_slice = []
+            for slice in slices:
+                x = torch.reshape(
+                    slice, (-1, self.in_channels, self.input_dim, self.input_dim, self.c))
+                # 3D-CNN
+                x = self.in_conv1(x)
+                x = self.in_conv2(x)
+                x = self.in_conv3(x)
+                # x = self.in_conv4(x)
+                x = x.view(1, -1)
+                x = self.fc1(x)
 
-        # x_ret = torch.stack(lst_x)
-        # return x_ret
+                # LSTM
+                x, hidden = self.lstm(x, hidden)
+
+                # 2D-CNN
+                x = self.linear(x)
+                x = x.view(-1, self.out_conv_channels,
+                           self.in_dim, self.in_dim)
+                x = self.out_conv1(x)
+                x = self.out_conv2(x)
+                lst_x_slice.append(x[0])
+
+            model = torch.cat(lst_x_slice, dim=0)
+            # print('model shape:', model.shape)
+            lst_x.append(model)
+
+        # print('lstx shape:', lst_x[0].shape)
+        x_ret = torch.stack(lst_x)
+        x_ret = torch.reshape(x_ret, (x_input.size(
+            0), self.in_channels, -1, self.output_dim, self.output_dim))
+        # print('x_ret shape:', x_ret.shape)
+        return x_ret
 
     # def pca(self):
     #     '''
@@ -124,34 +159,33 @@ class LRCN(nn.Module):
     #     '''
     #     return
 
+    def slice_model(self, x_3d):
+        '''
+        input: torch tensor of complete 3D model
+        output: a list of parsed tensors with c
+        '''
+        lst = []
+        i_start_to_pad = int((self.c-1)/2)
+        i_end_to_pad = x_3d.shape[0] - int((self.c-1)/2) - 1  # 32-2-1 = 29
+        for i in range(x_3d.shape[0]):
+            start = int(i-((self.c-1)/2))
+            start = start if start > 0 else 0
+            end = int(i+((self.c+1)/2))
+            # print('start:', start, 'end:', end)
+            # x_s = torch.narrow(x_3d, -1, start, c)   # c slices of model
+            x_s = x_3d[:, :, start:end]
+            if i < i_start_to_pad:
+                num_pad = i_start_to_pad - i
+                x_s = F.pad(x_s, (num_pad, 0, 0, 0, 0, 0),
+                            mode='constant', value=0)
+            elif i > i_end_to_pad:  # i larger than 29, so 30 and 31
+                num_pad = i - i_end_to_pad
+                x_s = F.pad(x_s, (0, num_pad, 0, 0, 0, 0),
+                            mode='constant', value=0)
+            # print(x_s.shape)
+            lst.append(x_s)
 
-def slice(x_3d, c=5):
-    '''
-    input: torch tensor of complete 3D model
-    output: a list of parsed tensors with c
-    '''
-    lst = []
-    i_start_to_pad = int((c-1)/2)
-    i_end_to_pad = x_3d.shape[0] - int((c-1)/2) - 1  # 32-2-1 = 29
-    for i in range(x_3d.shape[0]):
-        start = int(i-((c-1)/2))
-        start = start if start > 0 else 0
-        end = int(i+((c+1)/2))
-        print('start:', start, 'end:', end)
-        # x_s = torch.narrow(x_3d, -1, start, c)   # c slices of model
-        x_s = x_3d[:, :, start:end]
-        if i < i_start_to_pad:
-            num_pad = i_start_to_pad - i
-            x_s = F.pad(x_s, (num_pad, 0, 0, 0, 0, 0),
-                        mode='constant', value=0)
-        elif i > i_end_to_pad:  # i larger than 29, so 30 and 31
-            num_pad = i - i_end_to_pad
-            x_s = F.pad(x_s, (0, num_pad, 0, 0, 0, 0),
-                        mode='constant', value=0)
-        print(x_s.shape)
-        lst.append(x_s)
-
-    return lst
+        return lst
 
 
 def weights_init(m):

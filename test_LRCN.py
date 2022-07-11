@@ -9,7 +9,7 @@ import random
 from tqdm.auto import tqdm
 import numpy as np
 import os
-os.system('pip install torchinfo')
+# os.system('pip install torchinfo')
 
 # import matplotlib.pyplot as plt
 # import matplotlib.animation as animation
@@ -111,18 +111,21 @@ def get_dataloader(num_models, input_tensors, target_tensors):
 
 
 def init_LRCN(batch_size, input_dim, output_dim, c, device):
-    input_shape = (batch_size, 1, input_dim, input_dim, input_dim)
-    print('input shape:', input_shape)
+
     net = LRCN(input_dim=input_dim, kernel_size=3, c=c,
-               output_dim=output_dim, hidden_size=1000)
+               output_dim=output_dim, batch_size=batch_size, hidden_size=1000)
     net = net.to(device)
     opt = optim.Adam(net.parameters(), lr=lr, betas=(beta1, beta2))
     # criterion = torch.nn.BCELoss()
     criterion = torch.nn.L1Loss()
     # criterion = torch.nn.MSELoss()
     net.apply(weights_init)
+
+    # input_shape = (batch_size, 1, input_dim, input_dim, input_dim)
+    # print('input shape:', input_shape)
     # print("\n\nNetwork summary\n\n")
     # summary(net, input_shape)
+
     return net, opt, criterion
 
 

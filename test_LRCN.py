@@ -22,10 +22,12 @@ parser.add_argument('--batch_size', type=int, required=False)
 parser.add_argument('--input_dim', type=int, required=False)
 parser.add_argument('--output_dim', type=int, required=False)
 parser.add_argument('--c', type=int, required=False)
+parser.add_argument('--data_path', type=str, required=False)
 args = parser.parse_args()
 
 
-data_path = os.path.join('..', 'data', 'shapenet-lamp')
+data_path = args.data_path if args.data_path else os.path.join(
+    '..', 'data', 'shapenet-lamp')
 
 ### HYPERPARAMETERS ###
 # OPTIMIZER
@@ -33,7 +35,7 @@ lr = 1e-4
 beta1 = 0.5
 beta2 = 0.999
 
-#
+# argparse
 input_dim = args.input_dim if args.input_dim else 64
 output_dim = args.output_dim if args.output_dim else 128
 num_models = args.num_models if args.num_models else 500

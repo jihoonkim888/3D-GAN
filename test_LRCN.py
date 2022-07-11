@@ -123,7 +123,7 @@ def init_LRCN(batch_size, input_dim, output_dim, c, device):
     net.apply(weights_init)
     # print("\n\nNetwork summary\n\n")
     # summary(net, input_shape)
-    return net
+    return net, opt, criterion
 
 
 def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input_dim, output_dim, device, start_epoch=0):
@@ -177,6 +177,7 @@ if __name__ == "__main__":
         num_models, input_dim, output_dim)
     train_dataloader, val_dataloader = get_dataloader(
         num_models, input_tensors, target_tensors)
-    net = init_LRCN(batch_size, input_dim, output_dim, c, device)
+    net, opt, criterion = init_LRCN(
+        batch_size, input_dim, output_dim, c, device)
     run(net, num_epochs, train_dataloader, val_dataloader,
         opt, criterion, input_dim, output_dim, device)

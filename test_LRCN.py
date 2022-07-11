@@ -182,5 +182,9 @@ if __name__ == "__main__":
         num_models, input_tensors, target_tensors)
     net, opt, criterion = init_LRCN(
         batch_size, input_dim, output_dim, c, device)
+    input_sample = torch.randn(
+        batch_size, 1, input_dim, input_dim, input_dim).to(device)
+    output_sample = net(input_sample)
+    print('output size:', output_sample.size())
     run(net, num_epochs, train_dataloader, val_dataloader,
         opt, criterion, input_dim, output_dim, device)

@@ -115,7 +115,7 @@ def get_dataloader(num_models, input_tensors, target_tensors):
 def init_LRCN(batch_size, input_dim, output_dim, c, device):
 
     net = LRCN(input_dim=input_dim, kernel_size=3, c=c,
-               output_dim=output_dim, batch_size=batch_size, hidden_size=1000)
+               output_dim=output_dim, batch_size=batch_size)
     net = net.to(device)
     opt = optim.Adam(net.parameters(), lr=lr, betas=(beta1, beta2))
     # criterion = torch.nn.BCELoss()
@@ -178,15 +178,15 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
 if __name__ == "__main__":
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print('device:', device)
-    input_tensors, target_tensors = import_data(
-        num_models, input_dim, output_dim)
-    train_dataloader, val_dataloader = get_dataloader(
-        num_models, input_tensors, target_tensors)
+    # input_tensors, target_tensors = import_data(
+    #     num_models, input_dim, output_dim)
+    # train_dataloader, val_dataloader = get_dataloader(
+    #     num_models, input_tensors, target_tensors)
     net, opt, criterion = init_LRCN(
         batch_size, input_dim, output_dim, c, device)
     input_sample = torch.randn(
         batch_size, 1, input_dim, input_dim, input_dim).to(device)
     output_sample = net(input_sample)
     print('output size:', output_sample.size())
-    run(net, num_epochs, train_dataloader, val_dataloader,
-        opt, criterion, input_dim, output_dim, device)
+    # run(net, num_epochs, train_dataloader, val_dataloader,
+    #     opt, criterion, input_dim, output_dim, device)

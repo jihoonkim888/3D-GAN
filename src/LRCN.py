@@ -2,8 +2,6 @@ from dataclasses import replace
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn.utils.rnn import pack_padded_sequence
-from torch.nn.utils.rnn import pad_packed_sequence
 from torch.distributions import Categorical
 
 
@@ -61,7 +59,7 @@ class LRCN(nn.Module):
         # LSTM
         self.lstm = nn.LSTM(input_size=latent_size,
                             hidden_size=hidden_size,
-                            batch_first=True
+                            # batch_first=True
                             )
 
         # 2D CNN, two fully convolutional layers of kernel size 5 and stride 2, with batch norm and relu in between followed by tanh at the end
@@ -104,7 +102,12 @@ class LRCN(nn.Module):
         x_input: 5D tensor, size of (batch, channel, depth, height, width)
         c: number of slices to input for each LRCN
         '''
-        hidden = None
+        # hidden states for LSTM
+        # hidden = None
+        h0 = torch.randn(1, self.hidden_size)
+        c0 = torch.randn(1, self.hidden_size)
+        hidden = (h0, c0)
+
         lst_x = []
         lst_slices = []
 

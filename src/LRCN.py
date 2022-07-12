@@ -104,8 +104,8 @@ class LRCN(nn.Module):
         '''
         # hidden states for LSTM
         # hidden = None
-        h0 = torch.randn(1, self.hidden_size)
-        c0 = torch.randn(1, self.hidden_size)
+        h0 = torch.randn(1, self.hidden_size).to(device)
+        c0 = torch.randn(1, self.hidden_size).to(device)
         hidden = (h0, c0)
 
         lst_x = []

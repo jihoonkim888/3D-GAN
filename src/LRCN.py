@@ -108,14 +108,7 @@ class LRCN(nn.Module):
         # c0 = torch.randn(1, self.hidden_size).to(self.device)
         # hidden = (h0, c0)
 
-        lst_x = []
         lst_slices = []
-
-        # # slice per batch
-        # for b in range(x_input.size(0)):
-        #     x = x_input[b][0]  # 5D to 3D
-        #     x = self.slice_model(x)
-        #     lst_slices.append(x)
 
         for b in range(x_input.size(0)):
             x = x_input[b][0]  # 5D to 3D
@@ -126,68 +119,41 @@ class LRCN(nn.Module):
 
         arr = torch.cat(lst_slices)  # list of 5D to 6D tensor
         arr = torch.reshape(arr, (self.input_dim, arr.size()[
-                            0], self.in_channels, self.input_dim, self.input_dim, self.c))
+                            0], self.in_channels, self.input_dim, self.input_dim, self.c))  # (64, batch size, 1, 64, 64, 5)
 
-        # for slices in lst_slices:
-        #     lst_x_slice = []
-        #     for slice in slices:
-        #         x = torch.reshape(
-        #             slice, (-1, self.in_channels, self.input_dim, self.input_dim, self.c))
-        #         # 3D-CNN
-        #         x = self.in_conv1(x)
-        #         x = self.in_conv2(x)
-        #         x = self.in_conv3(x)
-        #         # x = self.in_conv4(x)
-        #         x = x.view(1, -1)
-        #         x = self.fc1(x)
+        lst_models = []
+        for batch in range(arr.size(1)):  # iterating each batch
+            lst_x = []
+            arr_batch = arr[:, batch, :, :, :, :]
+            # print(arr_batch.size())
+            for i in range(arr.size(0)):  # iterating by each slice
+                x = arr_batch[i].reshape(
+                    1, self.in_channels, self.input_dim, self.input_dim, self.c)   # 5D tensor
 
-        #         # LSTM
-        #         x, hidden = self.lstm(x, hidden)
+                # 3D-CNN
+                x = self.in_conv1(x)
+                x = self.in_conv2(x)
+                x = self.in_conv3(x)
+                x = x.view(1, -1)
+                x = self.fc1(x)
 
-        #         # 2D-CNN
-        #         x = self.linear(x)
-        #         x = x.view(-1, self.out_conv_channels,
-        #                    self.in_dim, self.in_dim)
-        #         x = self.out_conv1(x)
-        #         x = self.out_conv2(x)
-        #         lst_x_slice.append(x[0])
+                # LSTM
+                x, hidden = self.lstm(x, hidden)
 
-        #     model = torch.cat(lst_x_slice, dim=0)
-        #     # print('model shape:', model.shape)
-        #     lst_x.append(model)
+                # 2D-CNN
+                x = self.linear(x)
+                x = x.view(-1, self.out_conv_channels,
+                           self.in_dim, self.in_dim)  # 4D tensor
+                x = self.out_conv1(x)
+                x = self.out_conv2(x)
+                # appending 4D tensor (batch, 1, outdim, outdim)
+                lst_x.append(x)
+            model = torch.stack(lst_x)
+            lst_models.append(model)
 
-        lst_x = []
-        for i in range(arr.size(0)):
-            # hidden = None
-            x = arr[i]  # 5D tensor
-
-            # 3D-CNN
-            x = self.in_conv1(x)
-            x = self.in_conv2(x)
-            x = self.in_conv3(x)
-            # x = self.in_conv4(x)
-            # print('x size after in_conv3:', x.size())
-            x = x.view(1, -1)
-            x = self.fc1(x)
-            # print('x shape after fc1:', x.size())
-
-            # LSTM
-            x, hidden = self.lstm(x, hidden)
-
-            # 2D-CNN
-            x = self.linear(x)
-            # print('x size after linear:', x.size())
-            x = x.view(-1, self.out_conv_channels,
-                       self.in_dim, self.in_dim)
-            x = self.out_conv1(x)
-            x = self.out_conv2(x)
-            lst_x.append(x)
-
-        # print('lstx shape:', lst_x[0].shape)
-        x_ret = torch.stack(lst_x)
+        x_ret = torch.stack(lst_models)  # list of 4D to 5D tensor
         x_ret = torch.reshape(
             x_ret, (self.batch_size, self.in_channels, -1, self.output_dim, self.output_dim))
-        # print('x_ret shape:', x_ret.shape)
         return x_ret
 
     # def pca(self):

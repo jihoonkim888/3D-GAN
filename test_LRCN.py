@@ -145,11 +145,14 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
             input_data = input_data.to(device)
             opt.zero_grad()  # make sure no grad recorded on opt before the start of epoch
             # get inference
-            output = net(input_data)
-            # Calculate loss
-            err = criterion(output.cpu(), target_data)
-            lst_loss.append(err.item())
-            err.backward()  # err grad to opt
+            for batch in range(input_data.size(0)):
+                input_data_single = input_data[batch].reshape(
+                    1, 1, input_dim, input_dim, input_dim)
+                output = net(input_data_single)
+                # Calculate loss
+                err = criterion(output.cpu(), target_data)
+                # lst_loss.append(err.item())
+                err.backward()  # err grad to opt
             opt.step()
             opt.zero_grad()
 
@@ -183,9 +186,9 @@ if __name__ == "__main__":
     # train_dataloader, val_dataloader = get_dataloader(
     #     num_models, input_tensors, target_tensors)
     net, opt, criterion = init_LRCN(
-        batch_size, input_dim, output_dim, c, device)
+        batch_size=1, input_dim=input_dim, output_dim=output_dim, c=c, device=device)
     input_sample = torch.randn(
-        batch_size, 1, input_dim, input_dim, input_dim).to(device)
+        1, 1, input_dim, input_dim, input_dim).to(device)
     output_sample = net(input_sample)
     print('output size:', output_sample.size())
     # run(net, num_epochs, train_dataloader, val_dataloader,

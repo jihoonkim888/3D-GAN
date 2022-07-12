@@ -8,7 +8,7 @@ import random
 from tqdm.auto import tqdm
 import numpy as np
 import os
-
+from torchinfo import summary
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--num_epochs', type=int, required=False)
@@ -104,8 +104,8 @@ def get_dataloader(num_models, input_tensors, target_tensors):
     return train_dataloader, val_dataloader
 
 
-def init_upscaler(input_dim, output_dim):
-    net = Upscaler(input_dim=input_dim, output_dim=output_dim)
+def init_upscaler(input_dim, output_dim, batch_size):
+    net = Upscaler(input_dim=input_dim, output_dim=output_dim, batch_size=batch_size)
     opt = optim.Adam(net.parameters(), lr=lr, betas=(beta1, beta2))
     # criterion = torch.nn.BCELoss()
     criterion = torch.nn.L1Loss()
@@ -160,11 +160,13 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print('device:', device)
-    input_tensors, target_tensors = import_data(
-        num_models, input_dim, output_dim)
-    train_dataloader, val_dataloader = get_dataloader(
-        num_models, input_tensors, target_tensors)
-    net, opt, criterion = init_upscaler(input_dim, output_dim)
-    net = net.to(device)
-    run(net, num_epochs, train_dataloader, val_dataloader,
-        opt, criterion, input_dim, output_dim, device)
+    # input_tensors, target_tensors = import_data(
+    #     num_models, input_dim, output_dim)
+    # train_dataloader, val_dataloader = get_dataloader(
+    #     num_models, input_tensors, target_tensors)
+    net, opt, criterion = init_upscaler(input_dim, output_dim, batch_size)
+    summary(net, (batch_size, 1, 64, 64, 64))
+
+    # net = net.to(device)
+    # run(net, num_epochs, train_dataloader, val_dataloader,
+    #     opt, criterion, input_dim, output_dim, device)

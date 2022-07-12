@@ -1,19 +1,14 @@
+from src.upscaler import Upscaler
 import argparse
 from src import binvox_rw
-from src.LRCN import LRCN, weights_init
 from torch.utils.data import DataLoader
-from torchinfo import summary
 import torch.optim as optim
 import torch
 import random
 from tqdm.auto import tqdm
 import numpy as np
 import os
-# os.system('pip install torchinfo')
-
-# import matplotlib.pyplot as plt
-# import matplotlib.animation as animation
-
+from torchinfo import summary
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--num_epochs', type=int, required=False)
@@ -21,27 +16,24 @@ parser.add_argument('--num_models', type=int, required=False)
 parser.add_argument('--batch_size', type=int, required=False)
 parser.add_argument('--input_dim', type=int, required=False)
 parser.add_argument('--output_dim', type=int, required=False)
-parser.add_argument('--c', type=int, required=False)
 parser.add_argument('--data_path', type=str, required=False)
 args = parser.parse_args()
-
-
-data_path = args.data_path if args.data_path else os.path.join(
-    '..', 'data', 'shapenet-lamp')
-
-### HYPERPARAMETERS ###
-# OPTIMIZER
-lr = 1e-4
-beta1 = 0.5
-beta2 = 0.999
 
 # argparse
 input_dim = args.input_dim if args.input_dim else 64
 output_dim = args.output_dim if args.output_dim else 128
 num_models = args.num_models if args.num_models else 500
-c = args.c if args.c else 5
 num_epochs = args.num_epochs if args.num_epochs else 100
 batch_size = args.batch_size if args.batch_size else 4
+data_path = args.data_path if args.data_path else os.path.join(
+    '..', 'data', 'shapenet-lamp')
+
+### HYPERPARAMETERS ###
+# OPTIMIZER
+lr = 1e-3
+beta1 = 0.1
+beta2 = 0.999
+
 workers = 0
 run_parallel = False
 print('batch size:', batch_size)
@@ -112,27 +104,17 @@ def get_dataloader(num_models, input_tensors, target_tensors):
     return train_dataloader, val_dataloader
 
 
-def init_LRCN(batch_size, input_dim, output_dim, c, device):
-
-    net = LRCN(input_dim=input_dim, kernel_size=3, c=c,
-               output_dim=output_dim, batch_size=batch_size, hidden_size=1000)
-    net = net.to(device)
+def init_upscaler(input_dim, output_dim, batch_size):
+    net = Upscaler(input_dim=input_dim, output_dim=output_dim, batch_size=batch_size)
     opt = optim.Adam(net.parameters(), lr=lr, betas=(beta1, beta2))
     # criterion = torch.nn.BCELoss()
     criterion = torch.nn.L1Loss()
     # criterion = torch.nn.MSELoss()
-    net.apply(weights_init)
-
-    # input_shape = (batch_size, 1, input_dim, input_dim, input_dim)
-    # print('input shape:', input_shape)
-    # print("\n\nNetwork summary\n\n")
-    # summary(net, input_shape)
-
     return net, opt, criterion
 
 
 def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input_dim, output_dim, device, start_epoch=0):
-    weights_path = 'weights/LRCN'
+    weights_path = 'weights/upscaler'
     os.makedirs(weights_path, exist_ok=True)
     # Training Loop
     print("Starting Training Loop...")
@@ -175,18 +157,16 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
             print('saved network weights', net_filename)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print('device:', device)
-    input_tensors, target_tensors = import_data(
-        num_models, input_dim, output_dim)
-    train_dataloader, val_dataloader = get_dataloader(
-        num_models, input_tensors, target_tensors)
-    net, opt, criterion = init_LRCN(
-        batch_size, input_dim, output_dim, c, device)
-    input_sample = torch.randn(
-        batch_size, 1, input_dim, input_dim, input_dim).to(device)
-    output_sample = net(input_sample)
-    print('output size:', output_sample.size())
-    run(net, num_epochs, train_dataloader, val_dataloader,
-        opt, criterion, input_dim, output_dim, device)
+    # input_tensors, target_tensors = import_data(
+    #     num_models, input_dim, output_dim)
+    # train_dataloader, val_dataloader = get_dataloader(
+    #     num_models, input_tensors, target_tensors)
+    net, opt, criterion = init_upscaler(input_dim, output_dim, batch_size)
+    summary(net, (batch_size, 1, 64, 64, 64))
+
+    # net = net.to(device)
+    # run(net, num_epochs, train_dataloader, val_dataloader,
+    #     opt, criterion, input_dim, output_dim, device)

@@ -17,6 +17,7 @@ class LRCN(nn.Module):
         self.output_dim = output_dim
         self.latent_size = latent_size
         self.hidden_size = hidden_size
+        self.batch_size = batch_size
         self.c = c
 
         # 3D-GAN (encoder of 3D-ED-GAN)
@@ -69,7 +70,7 @@ class LRCN(nn.Module):
         out_conv1_channels = int(out_conv_channels / 2)
 
         self.linear = torch.nn.Linear(
-            hidden_size, out_conv_channels * in_dim * in_dim)
+            hidden_size, batch_size * out_conv_channels * in_dim * in_dim)
 
         self.out_conv1 = nn.Sequential(
             nn.ConvTranspose2d(in_channels=out_conv_channels,
@@ -115,14 +116,14 @@ class LRCN(nn.Module):
 
         for b in range(x_input.size(0)):
             x = x_input[b][0]  # 5D to 3D
-            x = net.slice_model(x)
-            x = torch.stack(x).reshape(net.input_dim, net.in_channels,
-                                       net.input_dim, net.input_dim, net.c)  # lists of 3D to 5D tensor
+            x = self.slice_model(x)
+            x = torch.stack(x).reshape(self.input_dim, self.in_channels,
+                                       self.input_dim, self.input_dim, self.c)  # lists of 3D to 5D tensor
             lst_slices.append(x.unsqueeze(0))
 
         arr = torch.cat(lst_slices)  # list of 5D to 6D tensor
-        arr = torch.reshape(arr, (net.input_dim, arr.size()[
-                            0], net.in_channels, net.input_dim, net.input_dim, net.c))
+        arr = torch.reshape(arr, (self.input_dim, arr.size()[
+                            0], self.in_channels, self.input_dim, self.input_dim, self.c))
 
         # for slices in lst_slices:
         #     lst_x_slice = []
@@ -161,14 +162,17 @@ class LRCN(nn.Module):
             x = self.in_conv2(x)
             x = self.in_conv3(x)
             # x = self.in_conv4(x)
+            # print('x size after in_conv3:', x.size())
             x = x.view(1, -1)
             x = self.fc1(x)
+            # print('x shape after fc1:', x.size())
 
             # LSTM
             x, hidden = self.lstm(x, hidden)
 
             # 2D-CNN
             x = self.linear(x)
+            # print('x size after linear:', x.size())
             x = x.view(-1, self.out_conv_channels,
                        self.in_dim, self.in_dim)
             x = self.out_conv1(x)
@@ -177,8 +181,8 @@ class LRCN(nn.Module):
 
         # print('lstx shape:', lst_x[0].shape)
         x_ret = torch.stack(lst_x)
-        # x_ret = torch.reshape(x_ret, (x_input.size(
-        #     0), self.in_channels, -1, self.output_dim, self.output_dim))
+        x_ret = torch.reshape(
+            x_ret, (self.batch_size, self.in_channels, -1, self.output_dim, self.output_dim))
         # print('x_ret shape:', x_ret.shape)
         return x_ret
 
@@ -247,20 +251,20 @@ def calculate_input_size_convtranspose2d(output_size, padding, dilation, kernel_
 #                                            padding=1, dilation=1, kernel_size=5, stride=2))
 
 
-net = LRCN(input_dim=64)
-lst_slices = []
-x_input = torch.randn((10, 1, 64, 64, 64))
-for b in range(x_input.size(0)):
-    x = x_input[b][0]  # 5D to 3D
-    x = net.slice_model(x)  # 64, 1, 64, 64, 5
-    x = torch.stack(x).reshape(net.input_dim, net.in_channels,
-                               net.input_dim, net.input_dim, net.c)  # lists of 3D to 5D tensor
-    lst_slices.append(x.unsqueeze(0))
+# net = LRCN(input_dim=64)
+# lst_slices = []
+# x_input = torch.randn((10, 1, 64, 64, 64))
+# for b in range(x_input.size(0)):
+#     x = x_input[b][0]  # 5D to 3D
+#     x = net.slice_model(x)  # 64, 1, 64, 64, 5
+#     x = torch.stack(x).reshape(net.input_dim, net.in_channels,
+#                                net.input_dim, net.input_dim, net.c)  # lists of 3D to 5D tensor
+#     lst_slices.append(x.unsqueeze(0))
 
-arr = torch.cat(lst_slices)
-arr = torch.reshape(arr, (net.input_dim, arr.size()[
-                    0], net.in_channels, net.input_dim, net.input_dim, net.c))
-print(arr.size())
-# for s in range(net.input_dim):
-#     for b in range(len(lst_slices)):
-#         a = arr[b][s]
+# arr = torch.cat(lst_slices)
+# arr = torch.reshape(arr, (net.input_dim, arr.size()[
+#                     0], net.in_channels, net.input_dim, net.input_dim, net.c))
+# print(arr.size())
+# # for s in range(net.input_dim):
+# #     for b in range(len(lst_slices)):
+# #         a = arr[b][s]

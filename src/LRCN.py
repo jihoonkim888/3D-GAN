@@ -103,7 +103,7 @@ class LRCN(nn.Module):
         c: number of slices to input for each LRCN
         '''
         # hidden states for LSTM
-        hidden = None
+        # hidden = None
         # h0 = torch.randn(1, self.hidden_size).to(self.device)
         # c0 = torch.randn(1, self.hidden_size).to(self.device)
         # hidden = (h0, c0)
@@ -125,6 +125,7 @@ class LRCN(nn.Module):
         for batch in range(arr.size(1)):  # iterating each batch
             lst_x = []
             arr_batch = arr[:, batch, :, :, :, :]
+            hidden = None
             # print(arr_batch.size())
             for i in range(arr.size(0)):  # iterating by each slice
                 x = arr_batch[i].reshape(

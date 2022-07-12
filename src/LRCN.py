@@ -155,6 +155,7 @@ class LRCN(nn.Module):
 
         lst_x = []
         for i in range(arr.size(0)):
+            hidden = None
             x = arr[i]  # 5D tensor
 
             # 3D-CNN

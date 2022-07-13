@@ -3,6 +3,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Categorical
+from sklearn.decomposition import PCA
+import numpy as np
 
 
 class LRCN(nn.Module):
@@ -108,6 +110,9 @@ class LRCN(nn.Module):
         # c0 = torch.randn(1, self.hidden_size).to(self.device)
         # hidden = (h0, c0)
 
+        # PCA
+        x_input = self.pca(x_input)
+
         lst_slices = []
 
         for b in range(x_input.size(0)):
@@ -157,11 +162,22 @@ class LRCN(nn.Module):
             x_ret, (self.batch_size, self.in_channels, -1, self.output_dim, self.output_dim))
         return x_ret
 
-    # def pca(self):
-    #     '''
-    #     Principal component analysis module, required to find the best orientation of an input model before going through the network.
-    #     '''
-    #     return
+    def pca(self, x_3d):
+        '''
+        Principal component analysis module, required to find the best orientation of an input model before going through the network.
+        x_3d: 5D tensor, size of (batch, channel, depth, height, width)
+        '''
+        x_3d = x_3d.numpy()
+        lst_batch = []
+        pca = PCA()
+        for b in range(x_3d.shape[0]):
+            # one batch in 5D to 2D for PCA
+            x = x_3d[b][0].reshape(x_3d.shape[0], -1)
+            x = pca.fit_transform(x)
+            print('x shape after pca:', x.shape)
+            lst_batch.append(np.expand_dims(x, axis=0))
+        x_ret = torch.from_numpy(np.array(lst_batch))
+        return x_ret
 
     def slice_model(self, x_3d):
         '''
@@ -209,33 +225,3 @@ def calculate_input_size_conv2d(output_size, padding, dilation, kernel_size, str
 def calculate_input_size_convtranspose2d(output_size, padding, dilation, kernel_size, stride, output_padding=0):
     # equation got from conv2d torch website
     return (output_size-1-output_padding-dilation*(kernel_size-1)+2*padding) / stride + 1
-
-# x_3d = torch.randn((32, 32, 32))
-# print(x_3d)
-# slices = slice(x_3d, c=5)
-# print(slices[0])
-
-
-# print(calculate_input_size_convtranspose2d(output_size=128,
-#       padding=1, dilation=1, kernel_size=5, stride=2))
-# print(calculate_input_size_convtranspose2d(output_size=64,
-#                                            padding=1, dilation=1, kernel_size=5, stride=2))
-
-
-# net = LRCN(input_dim=64)
-# lst_slices = []
-# x_input = torch.randn((10, 1, 64, 64, 64))
-# for b in range(x_input.size(0)):
-#     x = x_input[b][0]  # 5D to 3D
-#     x = net.slice_model(x)  # 64, 1, 64, 64, 5
-#     x = torch.stack(x).reshape(net.input_dim, net.in_channels,
-#                                net.input_dim, net.input_dim, net.c)  # lists of 3D to 5D tensor
-#     lst_slices.append(x.unsqueeze(0))
-
-# arr = torch.cat(lst_slices)
-# arr = torch.reshape(arr, (net.input_dim, arr.size()[
-#                     0], net.in_channels, net.input_dim, net.input_dim, net.c))
-# print(arr.size())
-# # for s in range(net.input_dim):
-# #     for b in range(len(lst_slices)):
-# #         a = arr[b][s]

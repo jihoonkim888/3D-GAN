@@ -30,8 +30,8 @@ data_path = args.data_path if args.data_path else os.path.join(
 
 ### HYPERPARAMETERS ###
 # OPTIMIZER
-lr = 1e-3
-beta1 = 0.1
+lr = 1e-4
+beta1 = 0.9
 beta2 = 0.999
 
 workers = 0
@@ -46,7 +46,7 @@ random.seed(manualSeed)
 torch.manual_seed(manualSeed)
 
 
-def import_data(num_models, input_dim, output_dim):
+def import_data(data_path, num_models, input_dim, output_dim):
     # input models of resolution 64
     input_data_filename = f'shapenet-lamp-binvox-{input_dim}'
     binvox_files = os.listdir(os.path.join(data_path, input_data_filename))
@@ -104,7 +104,7 @@ def get_dataloader(num_models, input_tensors, target_tensors):
     return train_dataloader, val_dataloader
 
 
-def init_upscaler(input_dim, output_dim, batch_size):
+def init_upscaler(input_dim, output_dim):
     net = Upscaler(input_dim=input_dim, output_dim=output_dim)
     opt = optim.Adam(net.parameters(), lr=lr, betas=(beta1, beta2))
     criterion = torch.nn.BCELoss()
@@ -114,7 +114,7 @@ def init_upscaler(input_dim, output_dim, batch_size):
 
 
 def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input_dim, output_dim, device, start_epoch=0):
-    weights_path = 'weights/upscaler'
+    weights_path = 'weights/simple_upscaler'
     os.makedirs(weights_path, exist_ok=True)
     # Training Loop
     print("Starting Training Loop...")
@@ -148,7 +148,7 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
                 print(
                     f'[{epoch}/{num_epochs}] [{i}/{len(train_dataloader)}]\tLoss: {round(err.item(), 4)}\tVal loss: {round(val_err.item(), 4)}')
 
-        if epoch % 5 == 0 and epoch != 0:
+        if epoch % 10 == 0 and epoch != 0:
             # plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies)
             # save network weights
             net_filename = os.path.join(
@@ -160,14 +160,14 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print('device:', device)
-    # input_tensors, target_tensors = import_data(
-    #     num_models, input_dim, output_dim)
-    # train_dataloader, val_dataloader = get_dataloader(
-    #     num_models, input_tensors, target_tensors)
+    input_tensors, target_tensors = import_data(
+        data_path, num_models, input_dim, output_dim)
+    train_dataloader, val_dataloader = get_dataloader(
+        num_models, input_tensors, target_tensors)
     net, opt, criterion = init_upscaler(
         input_dim=input_dim, output_dim=output_dim, batch_size=batch_size)
-    summary(net, (batch_size, 1, 64, 64, 64))
+    # summary(net, (batch_size, 1, 64, 64, 64))
 
-    # net = net.to(device)
-    # run(net, num_epochs, train_dataloader, val_dataloader,
-    #     opt, criterion, input_dim, output_dim, device)
+    net = net.to(device)
+    run(net, num_epochs, train_dataloader, val_dataloader,
+        opt, criterion, input_dim, output_dim, device)

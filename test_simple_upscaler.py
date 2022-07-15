@@ -160,14 +160,14 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print('device:', device)
-    input_tensors, target_tensors = import_data(
-        data_path, num_models, input_dim, output_dim)
-    train_dataloader, val_dataloader = get_dataloader(
-        num_models, input_tensors, target_tensors)
+#    input_tensors, target_tensors = import_data(
+#        data_path, num_models, input_dim, output_dim)
+#    train_dataloader, val_dataloader = get_dataloader(
+#        num_models, input_tensors, target_tensors)
     net, opt, criterion = init_upscaler(
-        input_dim=input_dim, output_dim=output_dim, batch_size=batch_size)
-    # summary(net, (batch_size, 1, 64, 64, 64))
+        input_dim=input_dim, output_dim=output_dim)
+    summary(net, (batch_size, 1, 64, 64, 64))
 
-    net = net.to(device)
-    run(net, num_epochs, train_dataloader, val_dataloader,
-        opt, criterion, input_dim, output_dim, device)
+#    net = net.to(device)
+#    run(net, num_epochs, train_dataloader, val_dataloader,
+#        opt, criterion, input_dim, output_dim, device)

@@ -8,7 +8,7 @@ import numpy as np
 
 
 class LRCN(nn.Module):
-    def __init__(self, in_channels=1, input_dim=64, output_dim=128, c=5, in_conv_channels=256, out_conv_channels=256, kernel_size=3, latent_size=200, hidden_size=100, batch_size=10):
+    def __init__(self, in_channels=1, input_dim=64, output_dim=128, c=5, in_conv_channels=256, out_conv_channels=256, kernel_size=3, latent_size=200, hidden_size=100, batch_size=4):
         super().__init__()
         self.in_channels = in_channels
         self.in_conv_channels = in_conv_channels
@@ -165,7 +165,8 @@ class LRCN(nn.Module):
     def pca(self, x_3d):
         '''
         Principal component analysis module, required to find the best orientation of an input model before going through the network.
-        x_3d: 5D tensor, size of (batch, channel, depth, height, width)
+        inputs x_3d: 5D tensor, size of (batch, channel, depth, height, width)
+        returns x_ret: 5D tensor with same size, but with orientated models along the first principal component
         '''
         x_3d = x_3d.numpy()
         lst_batch = []

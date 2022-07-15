@@ -1,4 +1,4 @@
-from src.upscaler import Upscaler
+from src.simple_upscaler import Upscaler
 import argparse
 from src import binvox_rw
 from torch.utils.data import DataLoader
@@ -105,11 +105,10 @@ def get_dataloader(num_models, input_tensors, target_tensors):
 
 
 def init_upscaler(input_dim, output_dim, batch_size):
-    net = Upscaler(input_dim=input_dim, output_dim=output_dim,
-                   batch_size=batch_size)
+    net = Upscaler(input_dim=input_dim, output_dim=output_dim)
     opt = optim.Adam(net.parameters(), lr=lr, betas=(beta1, beta2))
-    # criterion = torch.nn.BCELoss()
-    criterion = torch.nn.L1Loss()
+    criterion = torch.nn.BCELoss()
+    # criterion = torch.nn.L1Loss()
     # criterion = torch.nn.MSELoss()
     return net, opt, criterion
 
@@ -165,7 +164,8 @@ if __name__ == '__main__':
     #     num_models, input_dim, output_dim)
     # train_dataloader, val_dataloader = get_dataloader(
     #     num_models, input_tensors, target_tensors)
-    net, opt, criterion = init_upscaler(input_dim=input_dim, output_dim=output_dim, batch_size=batch_size)
+    net, opt, criterion = init_upscaler(
+        input_dim=input_dim, output_dim=output_dim, batch_size=batch_size)
     summary(net, (batch_size, 1, 64, 64, 64))
 
     # net = net.to(device)

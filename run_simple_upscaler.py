@@ -131,10 +131,12 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
         for i, (input_data, target_data) in enumerate(train_dataloader):  # batch
             opt.zero_grad()  # make sure no grad recorded on opt before the start of epoch
             input_data_split = torch.split(input_data, mini_batch_size)
-            for input_data_batch in input_data_split:
-                input_data_batch = input_data_batch.to(device)
+            target_data_split = torch.split(target_data, mini_batch_size)
+            for i in range(len(input_data_split)):
+                input_data_batch = input_data_split[i].to(device)
+		target_data_batch = target_data_split[i]
                 output = net(input_data_batch)
-                err = criterion(output.cpu(), target_data)
+                err = criterion(output.cpu(), target_data_batch)
                 lst_loss.append(err.item())
                 err.backward()  # err grad to opt
             opt.step()
@@ -157,7 +159,7 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
             # plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies)
             # save network weights
             net_filename = os.path.join(
-                weights_path, f'net_r{input_dim}_r{output_dim}_e{epoch}_weights.pth')
+                weights_path, f'net_r{input_dim}_r{output_dim}_{epoch}.pth')
             torch.save(net.state_dict(), net_filename)
             print('saved network weights', net_filename)
 

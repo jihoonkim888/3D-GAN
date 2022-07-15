@@ -30,7 +30,7 @@ data_path = args.data_path if args.data_path else os.path.join(
 
 ### HYPERPARAMETERS ###
 # OPTIMIZER
-lr = 1e-4
+lr = 1e-3
 beta1 = 0.9
 beta2 = 0.999
 
@@ -48,7 +48,7 @@ torch.manual_seed(manualSeed)
 
 def import_data(data_path, num_models, input_dim, output_dim):
     # input models of resolution 64
-    input_data_filename = f'shapenet-lamp-binvox-{input_dim}'
+    input_data_filename = f'{input_dim}'
     binvox_files = os.listdir(os.path.join(data_path, input_data_filename))
     binvox_files.sort()
     binvox_files = binvox_files[:num_models]
@@ -61,7 +61,7 @@ def import_data(data_path, num_models, input_dim, output_dim):
             m = binvox_rw.read_as_3d_array(f).data
             lst_binvox_input.append(m)
 
-    target_data_filename = f'shapenet-lamp-binvox-{output_dim}'
+    target_data_filename = f'{output_dim}'
     lst_binvox_target = []
     for file in tqdm(binvox_files):
         with open(os.path.join(data_path, target_data_filename, file), 'rb') as f:
@@ -148,7 +148,7 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
                 print(
                     f'[{epoch}/{num_epochs}] [{i}/{len(train_dataloader)}]\tLoss: {round(err.item(), 4)}\tVal loss: {round(val_err.item(), 4)}')
 
-        if epoch % 10 == 0 and epoch != 0:
+        if epoch % 5 == 0 and epoch != 0:
             # plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies)
             # save network weights
             net_filename = os.path.join(
@@ -160,14 +160,14 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print('device:', device)
-#    input_tensors, target_tensors = import_data(
-#        data_path, num_models, input_dim, output_dim)
-#    train_dataloader, val_dataloader = get_dataloader(
-#        num_models, input_tensors, target_tensors)
+    input_tensors, target_tensors = import_data(
+        data_path, num_models, input_dim, output_dim)
+    train_dataloader, val_dataloader = get_dataloader(
+        num_models, input_tensors, target_tensors)
     net, opt, criterion = init_upscaler(
         input_dim=input_dim, output_dim=output_dim)
-    summary(net, (batch_size, 1, 64, 64, 64))
+    #summary(net, (batch_size, 1, 64, 64, 64))
 
-#    net = net.to(device)
-#    run(net, num_epochs, train_dataloader, val_dataloader,
-#        opt, criterion, input_dim, output_dim, device)
+    net = net.to(device)
+    run(net, num_epochs, train_dataloader, val_dataloader,
+        opt, criterion, input_dim, output_dim, device)

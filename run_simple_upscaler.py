@@ -101,7 +101,7 @@ def get_dataloader(num_models, input_tensors, target_tensors):
 
     val_dataloader = DataLoader(
         val_dataset,
-        batch_size=batch_size/2,
+        batch_size=int(batch_size/2),
         # shuffle=True,
         shuffle=False,
         num_workers=workers,

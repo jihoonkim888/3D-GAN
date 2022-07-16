@@ -25,7 +25,8 @@ parser.add_argument('--test', type=bool, required=False)
 parser.add_argument('-b1', '--beta1', type=float, required=False)
 parser.add_argument('-b2', '--beta2', type=float, required=False)
 parser.add_argument('-lr', '--learning_rate', type=float, required=False)
-parser.add_argument('-a', '--alpha', type=float, required=False, help='alpha for weighted BCE loss')
+parser.add_argument('-a', '--alpha', type=float,
+                    required=False, help='alpha for weighted BCE loss')
 args = parser.parse_args()
 
 # argparse
@@ -144,7 +145,8 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, input_dim, outpu
                 input_data_batch = input_data_split[j].to(device)
                 target_data_batch = target_data_split[j].to(device)
                 output = net(input_data_batch)
-                err = BCELoss_w(output, target_data_batch, weights=[1-alpha, alpha])
+                err = BCELoss_w(output, target_data_batch,
+                                weights=[1-alpha, alpha])
                 lst_loss.append(err.item())
                 err.backward()  # err grad to opt
             opt.step()
@@ -155,7 +157,8 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, input_dim, outpu
             val_input = val_input.to(device)
             with torch.no_grad():
                 val_output = net(val_input)
-                val_err = BCELoss_w(val_output, val_target.to(device), weights=[alpha, 1-alpha])
+                val_err = BCELoss_w(val_output, val_target.to(
+                    device), weights=[alpha, 1-alpha])
                 lst_val_loss.append(val_err.item())
 
             # Output training stats at the end of epoch
@@ -210,8 +213,15 @@ if __name__ == '__main__':
         with torch.no_grad():
             output = net(input_tensors.to(device))
         output = output.cpu().numpy()
-        with open('test.npy', 'wb') as f:
-            np.save(f, output)
+        # with open('test.npy', 'wb') as f:
+        #     np.save(f, output)
+        syn_models_path = os.path.join(weights_path, 'syn_models')
+        os.makedirs(syn_models_path, exist_ok=True)
+        for n in range(output.shape[0]):
+            model = output[n][0]
+            n_zfill = str(n).zfill(4)
+            with open(os.path.join(syn_models_path, 'syn_model_{n_zfill}.binvox'), 'wb') as f:
+                model.write(f)
     else:
         input_tensors, target_tensors = import_data(
             data_path, num_models, input_dim, output_dim)

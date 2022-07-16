@@ -149,7 +149,7 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
             val_input = val_input.to(device)
             with torch.no_grad():
                 val_output = net(val_input)
-                val_err = criterion(val_output.cpu(), val_target)
+                val_err = criterion(val_output, val_target.to(device))
                 lst_val_loss.append(val_err.item())
 
             # Output training stats at the end of epoch

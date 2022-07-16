@@ -205,8 +205,9 @@ if __name__ == '__main__':
         print('loaded weights on net with', net_filename)
         input_tensors, target_tensors = import_data(
             data_path, 5, input_dim, output_dim)
-        output = net(input_tensors.to(device))
-        output = output.cpu().numpy()
+        with torch.no_grad():
+            output = net(input_tensors.to(device))
+            output = output.cpu().numpy()
         with open('test.npy', 'wb') as f:
             np.save(f, output)
     else:

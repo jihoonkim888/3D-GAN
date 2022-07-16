@@ -213,15 +213,11 @@ if __name__ == '__main__':
         with torch.no_grad():
             output = net(input_tensors.to(device))
         output = output.cpu().numpy()
-        # with open('test.npy', 'wb') as f:
-        #     np.save(f, output)
-        syn_models_path = os.path.join(weights_path, 'syn_models')
-        os.makedirs(syn_models_path, exist_ok=True)
-        for n in range(output.shape[0]):
-            model = output[n][0]
-            n_zfill = str(n).zfill(4)
-            with open(os.path.join(syn_models_path, 'syn_model_{n_zfill}.binvox'), 'wb') as f:
-                model.write(f)
+        output_filename = os.path.join(data_path, 'test.npy')
+        print('output:', output_filename)
+        with open(output_filename, 'wb') as f:
+            np.save(f, output)
+        print('Done!')
     else:
         input_tensors, target_tensors = import_data(
             data_path, num_models, input_dim, output_dim)

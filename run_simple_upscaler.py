@@ -25,7 +25,7 @@ parser.add_argument('--test', type=bool, required=False)
 parser.add_argument('-b1', '--beta1', type=float, required=False)
 parser.add_argument('-b2', '--beta2', type=float, required=False)
 parser.add_argument('-lr', '--learning_rate', type=float, required=False)
-parser.add_argument('--test', type=bool, required=False)
+#parser.add_argument('--test', type=bool, required=False)
 args = parser.parse_args()
 
 # argparse
@@ -199,7 +199,9 @@ if __name__ == '__main__':
         weights_available.sort()
         last_weights = weights_available[-1]
         net_filename = f'net_r{input_dim}_r{output_dim}_{last_weights}.pth'
-        torch.load(net.state_dict(), os.path.join(weights_path, net_filename))
+        print('weights to load:', net_filename)
+        net.load_state_dict(torch.load(
+            os.path.join(weights_path, net_filename)))
         print('loaded weights on net with', net_filename)
         input_tensors, target_tensors = import_data(
             data_path, 5, input_dim, output_dim)

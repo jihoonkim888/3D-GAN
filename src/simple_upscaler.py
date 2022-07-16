@@ -35,8 +35,8 @@ class Upscaler(nn.Module):
         return x
 
 
-def BCELoss_w(output, target, weights=None):
-        
+def BCELoss_w(output, target, weights=None, eps=1e-10):
+    output = output + eps
     if weights is not None:
         assert len(weights) == 2
         

@@ -206,7 +206,7 @@ if __name__ == '__main__':
         input_tensors, target_tensors = import_data(
             data_path, 5, input_dim, output_dim)
         output = net(input_tensors.to(device))
-        output = output.numpy()
+        output = output.cpu().numpy()
         with open('test.npy', 'wb') as f:
             np.save(f, output)
     else:

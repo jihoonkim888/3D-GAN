@@ -136,9 +136,9 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
             target_data_split = torch.split(target_data, mini_batch_size)
             for j in range(len(input_data_split)):
                 input_data_batch = input_data_split[j].to(device)
-                target_data_batch = target_data_split[j]
+                target_data_batch = target_data_split[j].to(device)
                 output = net(input_data_batch)
-                err = criterion(output.cpu(), target_data_batch)
+                err = criterion(output, target_data_batch)
                 lst_loss.append(err.item())
                 err.backward()  # err grad to opt
             opt.step()

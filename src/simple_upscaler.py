@@ -40,8 +40,7 @@ def BCELoss_w(output, target, weights=None):
     if weights is not None:
         assert len(weights) == 2
         
-        loss = weights[1] * torch.bmm(target, torch.log(output)) + \
-               weights[0] * torch.bmm((1 - target), torch.log(1 - output))
+        loss = weights[1] * (target * torch.log(output)) + weights[0] * ((1 - target) * torch.log(1 - output))
     else:
         loss = torch.mul(target, torch.log(output)) + torch.mul((1 - target), torch.log(1 - output))
 

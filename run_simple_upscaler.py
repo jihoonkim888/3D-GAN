@@ -144,7 +144,7 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, input_dim, outpu
                 input_data_batch = input_data_split[j].to(device)
                 target_data_batch = target_data_split[j].to(device)
                 output = net(input_data_batch)
-                err = BCELoss_w(output, target_data_batch, weights=[alpha, 1-alpha])
+                err = BCELoss_w(output, target_data_batch, weights=[1-alpha, alpha])
                 lst_loss.append(err.item())
                 err.backward()  # err grad to opt
             opt.step()

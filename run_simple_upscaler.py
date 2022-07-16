@@ -21,6 +21,11 @@ parser.add_argument('-id', '--input_dim', type=int, required=False)
 parser.add_argument('-od', '--output_dim', type=int, required=False)
 parser.add_argument('-dp', '--data_path', type=str, required=True)
 parser.add_argument('-wp', '--weight_path', type=str, required=True)
+parser.add_argument('--test', type=bool, required=False)
+parser.add_argument('-b1', '--beta1', type=float, required=False)
+parser.add_argument('-b2', '--beta2', type=float, required=False)
+parser.add_argument('-lr', '--learning_rate', type=float, required=False)
+parser.add_argument('--test', type=bool, required=False)
 args = parser.parse_args()
 
 # argparse
@@ -32,14 +37,13 @@ batch_size = args.batch_size if args.batch_size else 4
 mini_batch_size = args.mini_batch_size if args.mini_batch_size else 2
 data_path = args.data_path
 weights_path = args.weight_path
+test = args.test if args.test else False
 
 ### HYPERPARAMETERS ###
 # OPTIMIZER
-lr = 1e-4
-beta1 = 0.9
-beta2 = 0.999
-
-mini_batch_size = 2
+lr = args.learning_rate if args.learning_rate else 1e-4
+beta1 = args.beta1 if args.beta1 else 0.9
+beta2 = args.beta2 if args.beta2 else 0.999
 
 workers = 0
 run_parallel = False
@@ -185,14 +189,25 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print('device:', device)
-    input_tensors, target_tensors = import_data(
-        data_path, num_models, input_dim, output_dim)
-    train_dataloader, val_dataloader = get_dataloader(
-        num_models, input_tensors, target_tensors)
     net, opt, criterion = init_upscaler(
         input_dim=input_dim, output_dim=output_dim)
-    # summary(net, (batch_size, 1, 64, 64, 64))
-
     net = net.to(device)
-    run(net, num_epochs, train_dataloader, val_dataloader,
-        opt, criterion, input_dim, output_dim, device)
+    # summary(net, (batch_size, 1, 64, 64, 64))
+    if test:
+        weights_available = [i.strip('.pth'.split('-')[-1])
+                             for i in os.listdir(weights_path)]
+        weights_available.sort()
+        last_weights = weights_available[-1]
+        net_filename = f'net_r{input_dim}_r{output_dim}_{last_weights}.pth'
+        torch.load(net.state_dict(), os.path.join(weights_path, net_filename))
+        print('loaded weights on net with', net_filename)
+        input_tensors, target_tensors = import_data(
+            data_path, 5, input_dim, output_dim)
+        output = net(input_tensors)
+    else:
+        input_tensors, target_tensors = import_data(
+            data_path, num_models, input_dim, output_dim)
+        train_dataloader, val_dataloader = get_dataloader(
+            num_models, input_tensors, target_tensors)
+        run(net, num_epochs, train_dataloader, val_dataloader,
+            opt, criterion, input_dim, output_dim, device)

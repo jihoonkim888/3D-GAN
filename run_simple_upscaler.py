@@ -120,14 +120,14 @@ def get_dataloader(num_models, input_tensors, target_tensors):
 def init_upscaler(input_dim, output_dim):
     net = Upscaler(input_dim=input_dim, output_dim=output_dim)
     opt = optim.Adam(net.parameters(), lr=lr, betas=(beta1, beta2))
-    criterion = BCELoss_w(weights=[alpha, 1-alpha])
+    # criterion = BCELoss_w(weights=[alpha, 1-alpha])
     # criterion = torch.nn.BCELoss()
     # criterion = torch.nn.L1Loss()
     # criterion = torch.nn.MSELoss()
-    return net, opt, criterion
+    return net, opt
 
 
-def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input_dim, output_dim, device, start_epoch=0):
+def run(net, num_epochs, train_dataloader, val_dataloader, opt, input_dim, output_dim, device, start_epoch=0):
     os.makedirs(weights_path, exist_ok=True)
     # Training Loop
     print("Starting Training Loop...")
@@ -144,7 +144,7 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
                 input_data_batch = input_data_split[j].to(device)
                 target_data_batch = target_data_split[j].to(device)
                 output = net(input_data_batch)
-                err = criterion(output, target_data_batch)
+                err = BCELoss_w(output, target_data_batch, weights=[alpha, 1-alpha])
                 lst_loss.append(err.item())
                 err.backward()  # err grad to opt
             opt.step()
@@ -155,7 +155,7 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
             val_input = val_input.to(device)
             with torch.no_grad():
                 val_output = net(val_input)
-                val_err = criterion(val_output, val_target.to(device))
+                val_err = BCELoss_w(val_output, val_target.to(device), weights=[alpha, 1-alpha])
                 lst_val_loss.append(val_err.item())
 
             # Output training stats at the end of epoch
@@ -191,7 +191,7 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print('device:', device)
-    net, opt, criterion = init_upscaler(
+    net, opt = init_upscaler(
         input_dim=input_dim, output_dim=output_dim)
     net = net.to(device)
     # summary(net, (batch_size, 1, 64, 64, 64))
@@ -217,4 +217,4 @@ if __name__ == '__main__':
         train_dataloader, val_dataloader = get_dataloader(
             num_models, input_tensors, target_tensors)
         run(net, num_epochs, train_dataloader, val_dataloader,
-            opt, criterion, input_dim, output_dim, device)
+            opt, input_dim, output_dim, device)

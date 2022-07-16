@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from src.simple_upscaler import Upscaler
+from src.simple_upscaler import Upscaler, BCELoss_w
 import argparse
 from src import binvox_rw
 from torch.utils.data import DataLoader
@@ -25,7 +25,7 @@ parser.add_argument('--test', type=bool, required=False)
 parser.add_argument('-b1', '--beta1', type=float, required=False)
 parser.add_argument('-b2', '--beta2', type=float, required=False)
 parser.add_argument('-lr', '--learning_rate', type=float, required=False)
-#parser.add_argument('--test', type=bool, required=False)
+parser.add_argument('-a', '--alpha', type=float, required=False, help='alpha for weighted BCE loss')
 args = parser.parse_args()
 
 # argparse
@@ -35,6 +35,7 @@ num_models = args.num_models if args.num_models else 200
 num_epochs = args.num_epochs if args.num_epochs else 100
 batch_size = args.batch_size if args.batch_size else 4
 mini_batch_size = args.mini_batch_size if args.mini_batch_size else 2
+alpha = args.alpha if args.alpha else 0.85
 data_path = args.data_path
 weights_path = args.weight_path
 test = args.test if args.test else False
@@ -119,7 +120,8 @@ def get_dataloader(num_models, input_tensors, target_tensors):
 def init_upscaler(input_dim, output_dim):
     net = Upscaler(input_dim=input_dim, output_dim=output_dim)
     opt = optim.Adam(net.parameters(), lr=lr, betas=(beta1, beta2))
-    criterion = torch.nn.BCELoss()
+    criterion = BCELoss_w(weights=[alpha, 1-alpha])
+    # criterion = torch.nn.BCELoss()
     # criterion = torch.nn.L1Loss()
     # criterion = torch.nn.MSELoss()
     return net, opt, criterion

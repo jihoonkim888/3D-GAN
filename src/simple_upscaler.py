@@ -33,3 +33,16 @@ class Upscaler(nn.Module):
         x = self.up_conv1(x)
         x = self.up_conv2(x)
         return x
+
+
+def BCELoss_w(output, target, weights=None):
+        
+    if weights is not None:
+        assert len(weights) == 2
+        
+        loss = weights[1] * (target * torch.log(output)) + \
+               weights[0] * ((1 - target) * torch.log(1 - output))
+    else:
+        loss = target * torch.log(output) + (1 - target) * torch.log(1 - output)
+
+    return torch.neg(torch.mean(loss))

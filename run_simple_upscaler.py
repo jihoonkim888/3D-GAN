@@ -144,7 +144,7 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, input_dim, outpu
                 input_data_batch = input_data_split[j].to(device)
                 target_data_batch = target_data_split[j].to(device)
                 output = net(input_data_batch)
-                err = BCELoss_w(output, target_data_batch, weights=[1-alpha, alpha])
+                err = BCELoss_w(output, target_data_batch, weights=[alpha, 1-alpha])
                 lst_loss.append(err.item())
                 err.backward()  # err grad to opt
             opt.step()
@@ -207,7 +207,8 @@ if __name__ == '__main__':
         print('loaded weights on net with', net_filename)
         input_tensors, target_tensors = import_data(
             data_path, 5, input_dim, output_dim)
-        output = net(input_tensors.to(device))
+        with torch.no_grad():
+            output = net(input_tensors.to(device))
         output = output.cpu().numpy()
         with open('test.npy', 'wb') as f:
             np.save(f, output)

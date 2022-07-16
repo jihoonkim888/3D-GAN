@@ -16,6 +16,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-e', '--num_epochs', type=int, required=False)
 parser.add_argument('-n', '--num_models', type=int, required=False)
 parser.add_argument('-b', '--batch_size', type=int, required=False)
+parser.add_argument('-mb', '--mini_batch_size', type=int, required=False)
 parser.add_argument('-id', '--input_dim', type=int, required=False)
 parser.add_argument('-od', '--output_dim', type=int, required=False)
 parser.add_argument('-dp', '--data_path', type=str, required=True)
@@ -28,6 +29,7 @@ output_dim = args.output_dim if args.output_dim else 256
 num_models = args.num_models if args.num_models else 200
 num_epochs = args.num_epochs if args.num_epochs else 100
 batch_size = args.batch_size if args.batch_size else 4
+mini_batch_size = args.mini_batch_size if args.mini_batch_size else 2
 data_path = args.data_path
 weights_path = args.weight_path
 
@@ -148,7 +150,7 @@ def run(net, num_epochs, train_dataloader, val_dataloader, opt, criterion, input
             with torch.no_grad():
                 val_output = net(val_input)
                 val_err = criterion(val_output.cpu(), val_target)
-                lst_val_loss.append(val_err)
+                lst_val_loss.append(val_err.item())
 
             # Output training stats at the end of epoch
             if i % 20 == 0:

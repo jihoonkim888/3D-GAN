@@ -194,7 +194,7 @@ if __name__ == '__main__':
     net = net.to(device)
     # summary(net, (batch_size, 1, 64, 64, 64))
     if test:
-        weights_available = [i.strip('.pth'.split('-')[-1])
+        weights_available = [i.strip('.pth'.split('_')[-1])
                              for i in os.listdir(weights_path)]
         weights_available.sort()
         last_weights = weights_available[-1]

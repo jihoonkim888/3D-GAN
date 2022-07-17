@@ -49,7 +49,7 @@ def convert(lst_files, out_dim):
                 original_filename = os.path.join(
                     save_res_folder, 'model.binvox')
                 enum_filename = os.path.join(
-                    save_res_folder, f'model_{i}.binvox')
+                    save_res_folder, f'model_{str(i).zfill(4)}.binvox')
                 os.system(f'mv {original_filename} {enum_filename}')
             print(f'binvox files of res {res} saved to {save_res_folder}')
 

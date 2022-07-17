@@ -49,8 +49,8 @@ mini_batch_size = args.mini_batch_size if args.mini_batch_size else 50
 data_path = args.data_path
 weights_path = args.weight_path
 test = args.test if args.test else False
-lr_G = args.lrg if args.lrg else 0.0025
-lr_D = args.lrd if args.lrd else 0.0001
+lr_G = args.learning_rate_G if args.learning_rate_G else 0.0025
+lr_D = args.learning_rate_D if args.learning_rate_D else 0.0001
 beta1 = args.beta1 if args.beta1 else 0.5
 workers = 0
 

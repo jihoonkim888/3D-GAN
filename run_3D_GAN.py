@@ -93,11 +93,11 @@ def import_data(data_path, num_models, dim):
 
 
 def get_dataloader(input_tensors):
-    train_dataset = torch.utils.data.TensorDataset(
-        input_tensors)
+#    train_dataset = torch.utils.data.TensorDataset(
+#        input_tensors)
 
     dataloader = DataLoader(
-        train_dataset,
+        input_tensors,
         batch_size=batch_size,
         shuffle=True,
         num_workers=workers,
@@ -280,7 +280,7 @@ if __name__ == '__main__':
     print("\n\nGenerator summary\n\n")
     summary(netG, (1, noise_dim))
     print("\n\nDiscriminator summary\n\n")
-    summary(netD, (1, dim, dim, dim))
+    summary(netD, (mini_batch_size, 1, dim, dim, dim))
     input_tensors = import_data(data_path, num_models, dim)
     dataloader = get_dataloader(input_tensors)
     G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies = run(

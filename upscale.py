@@ -15,7 +15,8 @@ import os
 parser = argparse.ArgumentParser()
 parser.add_argument('-id', '--input_dim', type=int, required=False)
 parser.add_argument('-od', '--output_dim', type=int, required=False)
-parser.add_argument('-dp', '--data_path', type=str, required=False)
+parser.add_argument('-dp', '--data_path', type=str,
+                    required=True, help='Path to .npy file')
 parser.add_argument('-wp', '--weight_path', type=str, required=True)
 parser.add_argument('-e', '--epoch', type=int, required=False)
 args = parser.parse_args()
@@ -52,7 +53,7 @@ if __name__ == '__main__':
     net.load_state_dict(torch.load(
         os.path.join(weights_path, net_filename)))
     print('loaded weights on net with', net_filename)
-    with open('test.npy', 'wb') as f:
+    with open(data_path, 'rb') as f:
         arr = np.load(f)
     input_tensors = torch.tensor(arr)
     with torch.no_grad():

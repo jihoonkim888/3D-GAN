@@ -164,7 +164,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
     # Training Loop
     print("Starting Training Loop...")
     # For each epoch
-    for epoch in tqdm(range(num_epochs)):
+    for epoch in range(num_epochs):
         # For each batch in the dataloader
         lst_train_acc_real = []
         lst_train_acc_fake = []
@@ -258,11 +258,11 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             #     print(f'[{epoch}/{start_epoch+num_epochs}][{i}/{len(dataloader)}]\tLoss_D: {round(errD.item(), 4)}\tLoss_G: {round(errG.item(), 4)}\tD(x): {round(D_x, 4)}\tD(G(z)): {round(D_G_z1, 4)} / {round(D_G_z2, 4)}')
 
             iters += 1
-        
-        print(f'[{epoch}/{start_epoch+num_epochs}][{i}/{len(dataloader)}]\tLoss_D: {round(errD.item(), 4)}\tLoss_G: {round(errG.item(), 4)}\tD(x): {round(D_x, 4)}\tD(G(z)): {round(D_G_z1, 4)} / {round(D_G_z2, 4)}')
-        
+
+        print(f'[{epoch}/{start_epoch+num_epochs}][{i}/{len(dataloader)}]\tLoss_D: {round(errD.item(), 4)}\tLoss_G: {round(errG.item(), 4)}\tD(x): {round(D_x, 4)}\tD(G(z)): {round(D_G_z1, 4)} / {round(D_G_z2, 4)}\tD(x) acc: {acc_real_mean}\tD(G(z)) acc: {acc_fake_mean}')
+
         # save net weights every 10 epochs
-        if epoch % 10 == 0 and epoch != 0: 
+        if epoch % 10 == 0 and epoch != 0:
             # save network weights
             netG_filename = f'{weights_path}/netG_r{dim}_{epoch}.pth'
             netD_filename = f'{weights_path}/netD_r{dim}_{epoch}.pth'

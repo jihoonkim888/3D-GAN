@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from src.simple_upscaler import Upscaler, BCELoss_w
+from src.upscaler import Upscaler, BCELoss_w
 import argparse
 from src import binvox_rw
 from torch.utils.data import DataLoader

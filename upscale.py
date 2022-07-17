@@ -206,9 +206,9 @@ if __name__ == '__main__':
     net.load_state_dict(torch.load(
         os.path.join(weights_path, net_filename)))
     print('loaded weights on net with', net_filename)
-
-    # input_tensors, target_tensors = import_data(
-    #     data_path, 5, input_dim, output_dim)
+    with open('test.npy', 'wb') as f:
+        arr = np.load(f)
+    input_tensors = torch.tensor(arr)
     with torch.no_grad():
         output = net(input_tensors.to(device))
         output = output.cpu().numpy()

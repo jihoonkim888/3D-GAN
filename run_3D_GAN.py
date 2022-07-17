@@ -196,7 +196,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 # Calculate loss on all-real batch
                 D_x = output_real.mean().item()
                 train_acc_real = torch.sum(
-                    (output_real > 0.5).to(int) == label_real) / b_size
+                    (output_real > 0.5).to(int) == label_real) / b_size  # D predicted as real if more than 0.5
                 lst_train_acc_real.append(train_acc_real.item())
                 errD_real = criterion(
                     output_real, label_real) / len(data_split)
@@ -210,7 +210,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 output_fake = netD(fake).view(-1)
                 D_G_z1 = output_fake.mean().item()
                 train_acc_fake = torch.sum(
-                    (output_fake > 0.5).to(int) == label_fake) / b_size
+                    (output_fake > 0.5).to(int) == label_fake) / b_size  # 0 if predicted fake correctly, so == 0 returns True
                 lst_train_acc_fake.append(train_acc_fake.item())
                 errD_fake = criterion(
                     output_fake, label_fake) / len(data_split)
@@ -262,7 +262,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
 
             # Output training stats
             if i % 10 == 0:  # print progress every epoch
-                print(f'[{epoch}/{num_epochs}][{i}/{len(dataloader)}]\tLoss_D: {round(errD.item(), 4)}\tLoss_G: {round(errG.item(), 4)}\tD(x): {round(D_x, 4)}\tD(G(z)): {round(D_G_z1, 4)} / {round(D_G_z2, 4)}')
+                print(f'[{epoch}/{num_epochs}][{i}/{len(dataloader)}]\tLoss_D: {round(errD.item(), 4)}\tLoss_G: {round(errG.item(), 4)}\tD(x): {round(D_x, 4)}\tD(G(z)): {round(D_G_z1, 4)} / {round(D_G_z2, 4)}\D(x) / D(G(z)) acc: {round(acc_real_mean, 4)}, {round(acc_fake_mean, 4)}')
 
         if epoch % 10 == 0 and epoch != 0:
             # plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies)

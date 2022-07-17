@@ -171,51 +171,58 @@ def run(dataloader, netG, netD, optG, optD, criterion):
     # For each epoch
     for epoch in tqdm(range(num_epochs)):
         # For each batch in the dataloader
-        lst_train_acc_real = []
-        lst_train_acc_fake = []
+        # lst_train_acc_real = []
+        # lst_train_acc_fake = []
         for i, data_all in enumerate(dataloader, 0):
+            lst_train_acc_real = []
+            lst_train_acc_fake = []
             data_split = torch.split(data_all, mini_batch_size)
             optD.zero_grad()
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
 
-            for j in range(len(data_split)):
+            for real_data in data_split:
                 # Train with all-real batch
                 # Format batch
-                data = data_split[j]
-    #             print(data.shape)
-                real_cpu = data.to(device)
-                b_size = real_cpu.size(0)
+                real_data = real_data.to(device)
+                b_size = real_data.size(0)  # batch size
                 label_real = torch.full(
                     (b_size,), real_label, dtype=torch.float, device=device)
                 label_fake = torch.full(
                     (b_size,), fake_label, dtype=torch.float, device=device)
                 # Forward pass real batch through D
-                output_real = netD(real_cpu).view(-1)
+                output_real = netD(real_data).view(-1)
                 # Calculate loss on all-real batch
-                D_x = output_real.mean().item()
-                train_acc_real = torch.sum(
-                    (output_real > 0.5).to(int) == label_real) / b_size  # D predicted as real if more than 0.5
-                lst_train_acc_real.append(train_acc_real.item())
+                D_x = output_real.mean().item()  # average of discriminator loss with real data
+
                 errD_real = criterion(
                     output_real, label_real) / len(data_split)
                 errD_real.backward()
 
+                train_acc_real = torch.sum(
+                    (output_real > 0.5).to(int) == label_real) / b_size  # D predicted as real if more than 0.5
+                lst_train_acc_real.append(train_acc_real.item())
+
                 # Train with all-fake batch
                 # Generate batch of latent vectors
+                # noise vector for generator from normal distribution
                 noise = torch.randn(b_size, noise_dim, device=device)
-                # Generate fake image batch with G
-                fake = netG(noise).detach()
-                output_fake = netD(fake).view(-1)
+                # Generate fake shapes batch with G
+                with torch.no_grad():
+                    fake_data = netG(noise)
+                output_fake = netD(fake_data).view(-1)
                 D_G_z1 = output_fake.mean().item()
-                train_acc_fake = torch.sum(
-                    (output_fake > 0.5).to(int) == label_fake) / b_size  # 0 if predicted fake correctly, so == 0 returns True
-                lst_train_acc_fake.append(train_acc_fake.item())
+
                 errD_fake = criterion(
                     output_fake, label_fake) / len(data_split)
                 errD_fake.backward()
-                errD = errD_real + errD_fake
+
+                train_acc_fake = torch.sum(
+                    (output_fake > 0.5).to(int) == label_fake) / b_size  # 0 if predicted fake correctly, so == 0 returns True
+                lst_train_acc_fake.append(train_acc_fake.item())
+
+                errD = errD_real + errD_fake  # total error of discriminator
 
             # update D only if classification acc is less than 80% for stability
     #         if (i+1) % k == 0 or (i+1) == len(dataloader):

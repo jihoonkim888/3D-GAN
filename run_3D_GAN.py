@@ -253,13 +253,16 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 fake_accuracies.append(train_acc_fake.item())
                 real_accuracies.append(train_acc_real.item())
 
-            # Output training stats
-            if i % 10 == 0:  # print progress every epoch
-                print(f'[{epoch}/{start_epoch+num_epochs}][{i}/{len(dataloader)}]\tLoss_D: {round(errD.item(), 4)}\tLoss_G: {round(errG.item(), 4)}\tD(x): {round(D_x, 4)}\tD(G(z)): {round(D_G_z1, 4)} / {round(D_G_z2, 4)}')
+            # # Output training stats
+            # if i % 10 == 0:  # print progress every epoch
+            #     print(f'[{epoch}/{start_epoch+num_epochs}][{i}/{len(dataloader)}]\tLoss_D: {round(errD.item(), 4)}\tLoss_G: {round(errG.item(), 4)}\tD(x): {round(D_x, 4)}\tD(G(z)): {round(D_G_z1, 4)} / {round(D_G_z2, 4)}')
 
             iters += 1
-
-        if epoch % 10 == 0 and epoch != 0:
+        
+        print(f'[{epoch}/{start_epoch+num_epochs}][{i}/{len(dataloader)}]\tLoss_D: {round(errD.item(), 4)}\tLoss_G: {round(errG.item(), 4)}\tD(x): {round(D_x, 4)}\tD(G(z)): {round(D_G_z1, 4)} / {round(D_G_z2, 4)}')
+        
+        # save net weights every 10 epochs
+        if epoch % 10 == 0 and epoch != 0: 
             # save network weights
             netG_filename = f'{weights_path}/netG_r{dim}_{epoch}.pth'
             netD_filename = f'{weights_path}/netD_r{dim}_{epoch}.pth'

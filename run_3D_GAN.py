@@ -1,4 +1,5 @@
 import os
+from pickletools import int4
 import numpy as np
 from tqdm.auto import tqdm
 import random
@@ -21,6 +22,7 @@ parser.add_argument('-ch', '--conv_channels', type=int, required=False)
 parser.add_argument('-dp', '--data_path', type=str, required=True)
 parser.add_argument('-wp', '--weight_path', type=str, required=True)
 parser.add_argument('--synthesise', type=bool, required=False)
+parser.add_argument('-se', '--synthesis_epoch', type=int, required=False)
 parser.add_argument('-b1', '--beta1', type=float, required=False)
 parser.add_argument('-b2', '--beta2', type=float, required=False)
 parser.add_argument('-lrg', '--learning_rate_G', type=float, required=False)
@@ -42,7 +44,10 @@ synthesise = args.synthesise if args.synthesise else False
 lr_G = args.learning_rate_G if args.learning_rate_G else 0.0025
 lr_D = args.learning_rate_D if args.learning_rate_D else 1e-5
 beta1 = args.beta1 if args.beta1 else 0.5
+synthesis_epoch = args.synthesis_epoch if args.synthesis_epoch else None
+
 workers = 0
+
 
 noise_dim = args.noise_dim if args.noise_dim else 200  # latent space vector dim
 conv_channels = args.conv_channels if args.conv_channels else 256
@@ -281,12 +286,15 @@ if __name__ == '__main__':
     # summary(netD, (mini_batch_size, 1, dim, dim, dim))
 
     if synthesise:
-        weights_available = [i.strip('.pth').split('_')[-1]
-                             for i in os.listdir(weights_path)]
-        weights_available.sort()
-        last_weights = weights_available[-1]
-        netG_filename = f'{weights_path}/netG_r{dim}_{last_weights}.pth'
-        netD_filename = f'{weights_path}/netD_r{dim}_{last_weights}.pth'
+        if synthesis_epoch is not None:
+            epoch = synthesis_epoch
+        else:
+            weights_available = [i.strip('.pth').split('_')[-1]
+                                 for i in os.listdir(weights_path)]
+            weights_available.sort()
+            epoch = weights_available[-1]
+        netG_filename = f'{weights_path}/netG_r{dim}_{epoch}.pth'
+        netD_filename = f'{weights_path}/netD_r{dim}_{epoch}.pth'
         print('weights to load:', netG_filename, netD_filename)
         netG.load_state_dict(torch.load(netG_filename))
         netD.load_state_dict(torch.load(netD_filename))

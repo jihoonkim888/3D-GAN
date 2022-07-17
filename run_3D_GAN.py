@@ -182,7 +182,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
 
-            for real_data in data_split:
+            for j, real_data in enumerate(data_split):
                 # Train with all-real batch
                 # Format batch
                 real_data = real_data.to(device)

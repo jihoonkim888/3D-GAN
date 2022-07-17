@@ -206,7 +206,7 @@ if __name__ == '__main__':
     net.load_state_dict(torch.load(
         os.path.join(weights_path, net_filename)))
     print('loaded weights on net with', net_filename)
-    with open('test.npy', 'wb') as f:
+    with open('test.npy', 'rb') as f:
         arr = np.load(f)
     input_tensors = torch.tensor(arr)
     with torch.no_grad():

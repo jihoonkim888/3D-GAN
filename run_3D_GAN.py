@@ -50,7 +50,7 @@ data_path = args.data_path
 weights_path = args.weight_path
 test = args.test if args.test else False
 lr_G = args.learning_rate_G if args.learning_rate_G else 0.0025
-lr_D = args.learning_rate_D if args.learning_rate_D else 0.0001
+lr_D = args.learning_rate_D if args.learning_rate_D else 1e-5
 beta1 = args.beta1 if args.beta1 else 0.5
 workers = 0
 
@@ -129,8 +129,8 @@ def init_GAN():
 
 
 def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies):
-    lst_epoch = np.array(range(num_epochs * num_models /
-                         mini_batch_size)) / len(dataloader)
+    lst_epoch = np.array(range(int(num_epochs * num_models /
+                         mini_batch_size))) / len(dataloader)
     plt.figure(figsize=(10, 5))
     plt.title("Generator and Discriminator Loss During Training")
     plt.plot(lst_epoch, G_losses, label="G")

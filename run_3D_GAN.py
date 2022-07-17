@@ -304,7 +304,7 @@ if __name__ == '__main__':
         with torch.no_grad():
             output = netG(noise)
         output = output.cpu().numpy()
-        output_filename = os.path.join(data_path, 'test.npy')
+        output_filename = os.path.join(data_path, 'synthetic_samples.npy')
         print('synthetic output:', output_filename)
         with open(output_filename, 'wb') as f:
             np.save(f, output)

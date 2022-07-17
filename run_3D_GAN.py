@@ -294,7 +294,7 @@ if __name__ == '__main__':
         b_size = 20
         noise = torch.randn(b_size, noise_dim, device=device)
         with torch.no_grad():
-            output = netG(b_size)
+            output = netG(noise)
         output = output.cpu().numpy()
         output_filename = os.path.join(data_path, 'test.npy')
         print('synthetic output:', output_filename)

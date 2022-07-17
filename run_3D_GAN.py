@@ -192,16 +192,16 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 label_fake = torch.full(
                     (b_size,), fake_label, dtype=torch.float, device=device)
                 # Forward pass real batch through D
-                output_real = netD(real_data).view(-1)
+                predD_real = netD(real_data).view(-1)
                 # Calculate loss on all-real batch
-                D_x = output_real.mean().item()  # average of discriminator loss with real data
+                D_x = predD_real.mean().item()  # average of discriminator loss with real data
 
                 errD_real = criterion(
-                    output_real, label_real) / len(data_split)
+                    predD_real, label_real) / len(data_split)
                 errD_real.backward()
 
                 train_acc_real = torch.sum(
-                    (output_real > 0.5).to(int) == label_real) / b_size  # D predicted as real if more than 0.5
+                    (predD_real > 0.5).to(int) == label_real) / b_size  # D predicted as real if more than 0.5
                 lst_train_acc_real.append(train_acc_real.item())
 
                 # Train with all-fake batch
@@ -211,15 +211,15 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 # Generate fake shapes batch with G
                 with torch.no_grad():
                     fake_data = netG(noise)
-                output_fake = netD(fake_data).view(-1)
-                D_G_z1 = output_fake.mean().item()
+                predD_fake = netD(fake_data).view(-1)
+                D_G_z1 = predD_fake.mean().item()
 
                 errD_fake = criterion(
-                    output_fake, label_fake) / len(data_split)
+                    predD_fake, label_fake) / len(data_split)
                 errD_fake.backward()
 
                 train_acc_fake = torch.sum(
-                    (output_fake > 0.5).to(int) == label_fake) / b_size  # 0 if predicted fake correctly, so == 0 returns True
+                    (predD_fake > 0.5).to(int) == label_fake) / b_size  # 0 if predicted fake correctly, so == 0 returns True
                 lst_train_acc_fake.append(train_acc_fake.item())
 
                 errD = errD_real + errD_fake  # total error of discriminator

@@ -30,7 +30,7 @@ parser.add_argument('-nd', '--noise_dim', type=int, required=False)
 parser.add_argument('-ch', '--conv_channels', type=int, required=False)
 parser.add_argument('-dp', '--data_path', type=str, required=True)
 parser.add_argument('-wp', '--weight_path', type=str, required=True)
-parser.add_argument('--test', type=bool, required=False)
+parser.add_argument('--synthesise', type=bool, required=False)
 parser.add_argument('-b1', '--beta1', type=float, required=False)
 parser.add_argument('-b2', '--beta2', type=float, required=False)
 parser.add_argument('-lrg', '--learning_rate_G', type=float, required=False)
@@ -48,7 +48,7 @@ batch_size = args.batch_size if args.batch_size else 100
 mini_batch_size = args.mini_batch_size if args.mini_batch_size else 50
 data_path = args.data_path
 weights_path = args.weight_path
-test = args.test if args.test else False
+synthesise = args.synthesise if args.synthesise else False
 lr_G = args.learning_rate_G if args.learning_rate_G else 0.0025
 lr_D = args.learning_rate_D if args.learning_rate_D else 1e-5
 beta1 = args.beta1 if args.beta1 else 0.5
@@ -282,9 +282,34 @@ if __name__ == '__main__':
     summary(netG, (1, noise_dim))
     print("\n\nDiscriminator summary\n\n")
     summary(netD, (mini_batch_size, 1, dim, dim, dim))
-    input_tensors = import_data(data_path, num_models, dim)
-    dataloader = get_dataloader(input_tensors)
-    G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies = run(
-        dataloader, netG, netD, optG, optD, criterion)
-    plot_convergence(G_losses, D_real_losses, D_fake_losses,
-                     real_accuracies, fake_accuracies)
+
+    if synthesise:
+        weights_available = [i.strip('.pth').split('_')[-1]
+                             for i in os.listdir(weights_path)]
+        weights_available.sort()
+        last_weights = weights_available[-1]
+        netG_filename = f'{weights_path}/netG_r{dim}_{last_weights}.pth'
+        netD_filename = f'{weights_path}/netD_r{dim}_{last_weights}.pth'
+        print('weights to load:', netG_filename, netD_filename)
+        netG_filename.load_state_dict(torch.load(
+            os.path.join(weights_path, netG_filename)))
+        netD_filename.load_state_dict(torch.load(
+            os.path.join(weights_path, netD_filename)))
+        print('weights loaded')
+        input_tensors = import_data(data_path, num_models, dim)
+        with torch.no_grad():
+            output = netG(input_tensors.to(device))
+        output = output.cpu().numpy()
+        output_filename = os.path.join(data_path, 'test.npy')
+        print('synthetic output:', output_filename)
+        with open(output_filename, 'wb') as f:
+            np.save(f, output)
+        print('Done!')
+
+    else:
+        input_tensors = import_data(data_path, num_models, dim)
+        dataloader = get_dataloader(input_tensors)
+        G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies = run(
+            dataloader, netG, netD, optG, optD, criterion)
+        plot_convergence(G_losses, D_real_losses, D_fake_losses,
+                         real_accuracies, fake_accuracies)

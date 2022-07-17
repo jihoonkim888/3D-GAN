@@ -291,9 +291,10 @@ if __name__ == '__main__':
         netG.load_state_dict(torch.load(netG_filename))
         netD.load_state_dict(torch.load(netD_filename))
         print('weights loaded')
-        input_tensors = import_data(data_path, num_models, dim)
+        b_size = 20
+        noise = torch.randn(b_size, noise_dim, device=device)
         with torch.no_grad():
-            output = netG(input_tensors.to(device))
+            output = netG(b_size)
         output = output.cpu().numpy()
         output_filename = os.path.join(data_path, 'test.npy')
         print('synthetic output:', output_filename)

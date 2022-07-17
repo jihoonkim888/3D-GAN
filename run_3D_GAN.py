@@ -54,7 +54,7 @@ lr_D = args.learning_rate_D if args.learning_rate_D else 0.0001
 beta1 = args.beta1 if args.beta1 else 0.5
 workers = 0
 
-noise_dim = args.nd if args.nd else 200  # latent space vector dim
+noise_dim = args.noise_dim if args.noise_dim else 200  # latent space vector dim
 conv_channels = args.conv_channels if args.conv_channels else 256
 run_parallel = args.run_parallel if args.run_parallel else False
 k = int(batch_size / mini_batch_size)

@@ -93,8 +93,8 @@ def import_data(data_path, num_models, dim):
 
 
 def get_dataloader(input_tensors):
-#    train_dataset = torch.utils.data.TensorDataset(
-#        input_tensors)
+    #    train_dataset = torch.utils.data.TensorDataset(
+    #        input_tensors)
 
     dataloader = DataLoader(
         input_tensors,
@@ -129,7 +129,8 @@ def init_GAN():
 
 
 def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies):
-    lst_epoch = np.array(range(num_epochs * k)) / len(dataloader)
+    lst_epoch = np.array(range(num_epochs * num_models /
+                         mini_batch_size``)) / len(dataloader)
     plt.figure(figsize=(10, 5))
     plt.title("Generator and Discriminator Loss During Training")
     plt.plot(lst_epoch, G_losses, label="G")

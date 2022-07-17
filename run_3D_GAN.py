@@ -50,7 +50,7 @@ data_path = args.data_path
 weights_path = args.weight_path
 synthesise = args.synthesise if args.synthesise else False
 lr_G = args.learning_rate_G if args.learning_rate_G else 0.0025
-lr_D = args.learning_rate_D if args.learning_rate_D else 0.0001
+lr_D = args.learning_rate_D if args.learning_rate_D else 1e-5
 beta1 = args.beta1 if args.beta1 else 0.5
 workers = 0
 

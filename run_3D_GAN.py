@@ -148,14 +148,19 @@ def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fa
 
 
 def run(dataloader, netG, netD, optG, optD, criterion):
+
+    # Lists to keep track of progress
     G_losses = []
     D_real_losses = []
     D_fake_losses = []
     real_accuracies = []
     fake_accuracies = []
+    start_epoch = 0
+    iters = 0
 
     real_label = 1.
     fake_label = 0.
+
     # Training Loop
     print("Starting Training Loop...")
     # For each epoch
@@ -164,65 +169,60 @@ def run(dataloader, netG, netD, optG, optD, criterion):
         lst_train_acc_real = []
         lst_train_acc_fake = []
         for i, data_all in enumerate(dataloader, 0):
-            lst_train_acc_real = []
-            lst_train_acc_fake = []
             data_split = torch.split(data_all, mini_batch_size)
             optD.zero_grad()
+    #         print('reset netD grads')
             ############################
             # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
-
-            for j, real_data in enumerate(data_split):
-                # Train with all-real batch
-                # Format batch
+            # Train with all-real batch
+            # Format batch
+            for j in range(len(data_split)):
+                real_data = data_split[j]
                 real_data = real_data.to(device)
-                b_size = real_data.size(0)  # batch size
+                b_size = real_data.size(0)
                 label_real = torch.full(
                     (b_size,), real_label, dtype=torch.float, device=device)
                 label_fake = torch.full(
                     (b_size,), fake_label, dtype=torch.float, device=device)
                 # Forward pass real batch through D
-                predD_real = netD(real_data).view(-1)
+                outD_real = netD(real_data).view(-1)
                 # Calculate loss on all-real batch
-                D_x = predD_real.mean().item()  # average of discriminator loss with real data
-
-                errD_real = criterion(
-                    predD_real, label_real) / len(data_split)
-                errD_real.backward()
-
+                D_x = outD_real.mean().item()
                 train_acc_real = torch.sum(
-                    (predD_real > 0.5).to(int) == label_real) / b_size  # D predicted as real if more than 0.5
+                    (outD_real > 0.5).to(int) == label_real) / b_size
                 lst_train_acc_real.append(train_acc_real.item())
+                errD_real = criterion(outD_real, label_real) / len(data_split)
+                errD_real.backward()
 
                 # Train with all-fake batch
                 # Generate batch of latent vectors
-                # noise vector for generator from normal distribution
                 noise = torch.randn(b_size, noise_dim, device=device)
-                # Generate fake shapes batch with G
-                with torch.no_grad():
-                    fake_data = netG(noise)
-                predD_fake = netD(fake_data).view(-1)
-                D_G_z1 = predD_fake.mean().item()
-
-                errD_fake = criterion(
-                    predD_fake, label_fake) / len(data_split)
+                # Generate fake image batch with G
+                fake = netG(noise).detach()
+                outD_fake = netD(fake).view(-1)
+                D_G_z1 = outD_fake.mean().item()
+                train_acc_fake = torch.sum(
+                    (outD_fake > 0.5).to(int) == label_fake) / b_size
+                lst_train_acc_fake.append(train_acc_fake.item())
+                errD_fake = criterion(outD_fake, label_fake) / len(data_split)
                 errD_fake.backward()
 
-                train_acc_fake = torch.sum(
-                    (predD_fake > 0.5).to(int) == label_fake) / b_size  # 0 if predicted fake correctly, so == 0 returns True
-                lst_train_acc_fake.append(train_acc_fake.item())
-
-                errD = errD_real + errD_fake  # total error of discriminator
+                errD = errD_real + errD_fake
 
             # update D only if classification acc is less than 80% for stability
-            acc_real_mean = np.mean(lst_train_acc_real)
-            acc_fake_mean = np.mean(lst_train_acc_fake)
-            update = ((acc_real_mean + acc_fake_mean) / 2) < 0.8
-            if update:
-                optD.step()  # update the weights only after accumulating k small batches
-            optD.zero_grad()  # reset gradients for accumulation for the next large batch
-            lst_train_acc_real = []
-            lst_train_acc_fake = []
+    #         if (i+1) % k == 0 or (i+1) == len(dataloader):
+                if j == len(data_split)-1:
+                    acc_real_mean = np.mean(lst_train_acc_real)
+                    acc_fake_mean = np.mean(lst_train_acc_fake)
+                    update = ((acc_real_mean + acc_fake_mean) / 2) < 0.8
+                    if update:
+                        optD.step()  # update the weights only after accumulating k small batches
+    #                     print('updated optD')
+
+                    optD.zero_grad()  # reset gradients for accumulation for the next large batch
+                    lst_train_acc_real = []
+                    lst_train_acc_fake = []
 
             ############################
             # (2) Update G network: maximize log(D(G(z)))
@@ -255,10 +255,11 @@ def run(dataloader, netG, netD, optG, optD, criterion):
 
             # Output training stats
             if i % 10 == 0:  # print progress every epoch
-                print(f'[{epoch}/{num_epochs}][{i}/{len(dataloader)}]\tLoss_D: {round(errD.item(), 4)}\tLoss_G: {round(errG.item(), 4)}\tD(x): {round(D_x, 4)}\tD(G(z)): {round(D_G_z1, 4)} / {round(D_G_z2, 4)}\D(x) / D(G(z)) acc: {round(acc_real_mean, 4)}, {round(acc_fake_mean, 4)}')
+                print(f'[{epoch}/{start_epoch+num_epochs}][{i}/{len(dataloader)}]\tLoss_D: {round(errD.item(), 4)}\tLoss_G: {round(errG.item(), 4)}\tD(x): {round(D_x, 4)}\tD(G(z)): {round(D_G_z1, 4)} / {round(D_G_z2, 4)}')
+
+            iters += 1
 
         if epoch % 10 == 0 and epoch != 0:
-            # plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies)
             # save network weights
             netG_filename = f'{weights_path}/netG_r{dim}_{epoch}.pth'
             netD_filename = f'{weights_path}/netD_r{dim}_{epoch}.pth'

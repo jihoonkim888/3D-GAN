@@ -161,8 +161,8 @@ def run(dataloader, netG, netD, optG, optD, criterion):
     # For each epoch
     for epoch in tqdm(range(num_epochs)):
         # For each batch in the dataloader
-        # lst_train_acc_real = []
-        # lst_train_acc_fake = []
+        lst_train_acc_real = []
+        lst_train_acc_fake = []
         for i, data_all in enumerate(dataloader, 0):
             lst_train_acc_real = []
             lst_train_acc_fake = []
@@ -215,18 +215,14 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 errD = errD_real + errD_fake  # total error of discriminator
 
             # update D only if classification acc is less than 80% for stability
-    #         if (i+1) % k == 0 or (i+1) == len(dataloader):
-                if j == len(data_split)-1:
-                    acc_real_mean = np.mean(lst_train_acc_real)
-                    acc_fake_mean = np.mean(lst_train_acc_fake)
-                    update = ((acc_real_mean + acc_fake_mean) / 2) < 0.8
-                    if update:
-                        optD.step()  # update the weights only after accumulating k small batches
-    #                     print('updated optD')
-
-                    optD.zero_grad()  # reset gradients for accumulation for the next large batch
-                    lst_train_acc_real = []
-                    lst_train_acc_fake = []
+            acc_real_mean = np.mean(lst_train_acc_real)
+            acc_fake_mean = np.mean(lst_train_acc_fake)
+            update = ((acc_real_mean + acc_fake_mean) / 2) < 0.8
+            if update:
+                optD.step()  # update the weights only after accumulating k small batches
+            optD.zero_grad()  # reset gradients for accumulation for the next large batch
+            lst_train_acc_real = []
+            lst_train_acc_fake = []
 
             ############################
             # (2) Update G network: maximize log(D(G(z)))

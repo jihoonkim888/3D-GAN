@@ -288,10 +288,8 @@ if __name__ == '__main__':
         netG_filename = f'{weights_path}/netG_r{dim}_{last_weights}.pth'
         netD_filename = f'{weights_path}/netD_r{dim}_{last_weights}.pth'
         print('weights to load:', netG_filename, netD_filename)
-        netG_filename.load_state_dict(torch.load(
-            os.path.join(weights_path, netG_filename)))
-        netD_filename.load_state_dict(torch.load(
-            os.path.join(weights_path, netD_filename)))
+        netG.load_state_dict(torch.load(netG_filename))
+        netD.load_state_dict(torch.load(netD_filename))
         print('weights loaded')
         input_tensors = import_data(data_path, num_models, dim)
         with torch.no_grad():

@@ -256,8 +256,8 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 D_G_z2 = output.mean().item()
     #             if (i+1) % k == 0 or (i+1) == len(dataloader):
                 if j == len(data_split)-1:
-                    optD.step()  # update the weights only after accumulating k small batches
-                    optD.zero_grad()  # reset gradients for accumulation for the next large_batch
+                    optG.step()  # update the weights only after accumulating k small batches
+                    optG.zero_grad()  # reset gradients for accumulation for the next large_batch
     #                 print('updated optG')
 
                 # Save Losses for plotting later

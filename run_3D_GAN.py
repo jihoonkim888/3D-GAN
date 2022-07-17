@@ -46,7 +46,6 @@ num_models = args.num_models if args.num_models else 2000
 num_epochs = args.num_epochs if args.num_epochs else 100
 batch_size = args.batch_size if args.batch_size else 100
 mini_batch_size = args.mini_batch_size if args.mini_batch_size else 50
-alpha = args.alpha if args.alpha else 0.85
 data_path = args.data_path
 weights_path = args.weight_path
 test = args.test if args.test else False

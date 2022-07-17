@@ -1,20 +1,10 @@
 import os
-try:
-    import h5py
-except ImportError:
-    os.system('pip install h5py')
-    import h5py
 import numpy as np
 from tqdm.auto import tqdm
 import random
 import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader
-try:
-    from torchinfo import summary
-except ImportError:
-    os.system('pip install torchinfo')
-    from torchinfo import summary
 import matplotlib.pyplot as plt
 from src import binvox_rw
 from src.GAN import Discriminator, Generator, weights_init
@@ -285,10 +275,10 @@ def run(dataloader, netG, netD, optG, optD, criterion):
 
 if __name__ == '__main__':
     netG, netD, optG, optD, criterion = init_GAN()
-    print("\n\nGenerator summary\n\n")
-    summary(netG, (1, noise_dim))
-    print("\n\nDiscriminator summary\n\n")
-    summary(netD, (mini_batch_size, 1, dim, dim, dim))
+    # print("\n\nGenerator summary\n\n")
+    # summary(netG, (1, noise_dim))
+    # print("\n\nDiscriminator summary\n\n")
+    # summary(netD, (mini_batch_size, 1, dim, dim, dim))
 
     if synthesise:
         weights_available = [i.strip('.pth').split('_')[-1]

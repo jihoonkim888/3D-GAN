@@ -70,8 +70,7 @@ torch.manual_seed(manualSeed)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print('device:', device)
-weights_dirname = os.path.join(weights_path, '3D-GAN')
-os.makedirs(f'{weights_path}', exist_ok=True)
+os.makedirs(weights_path, exist_ok=True)
 
 
 def import_data(data_path, num_models, dim):

@@ -8,6 +8,10 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 
+'''
+https://github.com/black0017/3D-GAN-pytorch
+'''
+
 
 class Discriminator(torch.nn.Module):
     def __init__(self, in_channels=1, dim=64, out_conv_channels=256):
@@ -51,7 +55,8 @@ class Discriminator(torch.nn.Module):
             nn.LeakyReLU(0.2, inplace=True)
         )
         self.out = nn.Sequential(
-            nn.Linear(out_conv_channels * self.out_dim * self.out_dim * self.out_dim, 1),
+            nn.Linear(out_conv_channels * self.out_dim *
+                      self.out_dim * self.out_dim, 1),
             nn.Sigmoid(),
         )
 
@@ -61,7 +66,8 @@ class Discriminator(torch.nn.Module):
         x = self.conv3(x)
         x = self.conv4(x)
         # Flatten and apply linear + sigmoid
-        x = x.view(-1, self.out_conv_channels * self.out_dim * self.out_dim * self.out_dim)
+        x = x.view(-1, self.out_conv_channels *
+                   self.out_dim * self.out_dim * self.out_dim)
         x = self.out(x)
         return x
 
@@ -76,11 +82,13 @@ class Generator(torch.nn.Module):
         conv2_out_channels = int(conv1_out_channels / 2)
         conv3_out_channels = int(conv2_out_channels / 2)
 
-        self.linear = torch.nn.Linear(noise_dim, in_channels * self.in_dim * self.in_dim * self.in_dim)
+        self.linear = torch.nn.Linear(
+            noise_dim, in_channels * self.in_dim * self.in_dim * self.in_dim)
 
         self.conv1 = nn.Sequential(
             nn.ConvTranspose3d(
-                in_channels=in_channels, out_channels=conv1_out_channels, kernel_size=(4, 4, 4),
+                in_channels=in_channels, out_channels=conv1_out_channels, kernel_size=(
+                    4, 4, 4),
                 stride=2, padding=1, bias=False
             ),
             nn.BatchNorm3d(conv1_out_channels),
@@ -88,7 +96,8 @@ class Generator(torch.nn.Module):
         )
         self.conv2 = nn.Sequential(
             nn.ConvTranspose3d(
-                in_channels=conv1_out_channels, out_channels=conv2_out_channels, kernel_size=(4, 4, 4),
+                in_channels=conv1_out_channels, out_channels=conv2_out_channels, kernel_size=(
+                    4, 4, 4),
                 stride=2, padding=1, bias=False
             ),
             nn.BatchNorm3d(conv2_out_channels),
@@ -96,7 +105,8 @@ class Generator(torch.nn.Module):
         )
         self.conv3 = nn.Sequential(
             nn.ConvTranspose3d(
-                in_channels=conv2_out_channels, out_channels=conv3_out_channels, kernel_size=(4, 4, 4),
+                in_channels=conv2_out_channels, out_channels=conv3_out_channels, kernel_size=(
+                    4, 4, 4),
                 stride=2, padding=1, bias=False
             ),
             nn.BatchNorm3d(conv3_out_channels),
@@ -104,7 +114,8 @@ class Generator(torch.nn.Module):
         )
         self.conv4 = nn.Sequential(
             nn.ConvTranspose3d(
-                in_channels=conv3_out_channels, out_channels=out_channels, kernel_size=(4, 4, 4),
+                in_channels=conv3_out_channels, out_channels=out_channels, kernel_size=(
+                    4, 4, 4),
                 stride=2, padding=1, bias=False
             )
         )

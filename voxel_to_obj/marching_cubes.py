@@ -5,9 +5,6 @@ import os
 from scipy.spatial.transform import Rotation as R
 from tqdm.auto import tqdm
 
-
-threshold = 0.3
-
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--file_path', type=str,
                     required=True, help='file path to .npy file')
@@ -23,7 +20,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     file_path = args.file_path
     save_path = args.save_path
-    threshold = args.threshold if args.threshold else threshold
+    threshold = args.threshold if args.threshold else 0.3
     smoothen = args.smoothen if args.smoothen else False
 
     # open the .npy file and read the numpy array

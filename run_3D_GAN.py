@@ -299,7 +299,7 @@ if __name__ == '__main__':
         netG.load_state_dict(torch.load(netG_filename))
         netD.load_state_dict(torch.load(netD_filename))
         print('weights loaded')
-        b_size = 20
+        b_size = 2
         noise = torch.randn(b_size, noise_dim, device=device)
         with torch.no_grad():
             output = netG(noise)

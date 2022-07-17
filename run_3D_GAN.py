@@ -1,12 +1,20 @@
 import os
-import h5py
+try:
+    import h5py
+except ImportError:
+    os.system('pip install h5py')
+    import h5py
 import numpy as np
 from tqdm.auto import tqdm
 import random
 import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from torchsummary import summary
+try:
+    from torchinfo import summary
+except ImportError:
+    os.system('pip install torchinfo')
+    from torchinfo import summary
 import matplotlib.pyplot as plt
 from src import binvox_rw
 from src.GAN import Discriminator, Generator, weights_init

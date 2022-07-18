@@ -27,7 +27,7 @@ save_path = args.save_path
 input_dim = 64
 output_dim = 256
 weight_epoch = args.weight_epoch if args.weight_epoch else None
-b_size = 50
+b_size = 2
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print('device:', device)

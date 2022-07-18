@@ -20,7 +20,7 @@ save_path = args.save_path
 n_samples = args.n_samples
 dim = 64
 noise_dim = 200
-b_size = 2
+b_size = 50
 conv_channels = 256
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'

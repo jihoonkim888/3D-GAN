@@ -134,7 +134,7 @@ def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fa
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.legend()
-    filename = os.path.join(data_path, '3D_GAN_loss_plot.png')
+    filename = os.path.join(weights_path, '3D_GAN_loss_plot.png')
     plt.savefig(filename, dpi=200)
     print('Loss plot saved to', filename)
 
@@ -146,7 +146,7 @@ def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fa
     plt.ylabel("Accuracy")
     plt.legend()
 
-    filename = os.path.join(data_path, '3D_GAN_syn_acc_plot.png')
+    filename = os.path.join(weights_path, '3D_GAN_syn_acc_plot.png')
     plt.savefig(filename, dpi=200)
     print('Accuracy plot saved to', filename)
     return
@@ -266,8 +266,8 @@ def run(dataloader, netG, netD, optG, optD, criterion):
 
         print(f'[{epoch}/{start_epoch+num_epochs}][{i}/{len(dataloader)}]\tLoss_D: {round(errD.item(), 4)}\tLoss_G: {round(errG.item(), 4)}\tD(x): {round(D_x, 4)}\tD(G(z)): {round(D_G_z1, 4)} / {round(D_G_z2, 4)}\tD(x) acc: {round(acc_real_mean, 4)}\tD(G(z)) acc: {round(acc_fake_mean, 4)}')
 
-        # save net weights every 10 epochs
-        if epoch % 10 == 0 and epoch != 0:
+        # save net weights every 5 epochs
+        if epoch % 5 == 0 and epoch != 0:
             # save network weights
             netG_filename = f'{weights_path}/netG_r{dim}_{epoch}.pth'
             netD_filename = f'{weights_path}/netD_r{dim}_{epoch}.pth'
@@ -299,12 +299,12 @@ if __name__ == '__main__':
         netG.load_state_dict(torch.load(netG_filename))
         netD.load_state_dict(torch.load(netD_filename))
         print('weights loaded')
-        b_size = 20
+        b_size = 2
         noise = torch.randn(b_size, noise_dim, device=device)
         with torch.no_grad():
             output = netG(noise)
         output = output.cpu().numpy()
-        output_filename = os.path.join(data_path, 'test.npy')
+        output_filename = os.path.join(data_path, 'synthetic_samples.npy')
         print('synthetic output:', output_filename)
         with open(output_filename, 'wb') as f:
             np.save(f, output)

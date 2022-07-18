@@ -5,7 +5,7 @@ import os
 from scipy.spatial.transform import Rotation as R
 from tqdm.auto import tqdm
 
-threshold = 0.3
+threshold = 0.5
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--file_path', type=str,
                     required=True, help='file path to .npy file')

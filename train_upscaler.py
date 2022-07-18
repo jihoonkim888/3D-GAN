@@ -21,7 +21,6 @@ parser.add_argument('-id', '--input_dim', type=int, required=False)
 parser.add_argument('-od', '--output_dim', type=int, required=False)
 parser.add_argument('-dp', '--data_path', type=str, required=True)
 parser.add_argument('-wp', '--weight_path', type=str, required=True)
-parser.add_argument('--test', type=bool, required=False)
 parser.add_argument('-b1', '--beta1', type=float, required=False)
 parser.add_argument('-b2', '--beta2', type=float, required=False)
 parser.add_argument('-lr', '--learning_rate', type=float, required=False)
@@ -39,7 +38,6 @@ mini_batch_size = args.mini_batch_size if args.mini_batch_size else 2
 alpha = args.alpha if args.alpha else 0.85
 data_path = args.data_path
 weights_path = args.weight_path
-test = args.test if args.test else False
 
 ### HYPERPARAMETERS ###
 # OPTIMIZER
@@ -198,28 +196,9 @@ if __name__ == '__main__':
         input_dim=input_dim, output_dim=output_dim)
     net = net.to(device)
     # summary(net, (batch_size, 1, 64, 64, 64))
-    if test:
-        weights_available = [i.strip('.pth').split('_')[-1]
-                             for i in os.listdir(weights_path)]
-        weights_available.sort()
-        last_weights = weights_available[-1]
-        net_filename = f'net_r{input_dim}_r{output_dim}_{last_weights}.pth'
-        print('weights to load:', net_filename)
-        net.load_state_dict(torch.load(
-            os.path.join(weights_path, net_filename)))
-        print('loaded weights on net with', net_filename)
-        input_tensors, target_tensors = import_data(
-            data_path, 5, input_dim, output_dim)
-        with torch.no_grad():
-            output = net(input_tensors.to(device))
-            output = output.cpu().numpy()
-        with open('test.npy', 'wb') as f:
-            np.save(f, output)
-        print('Done!')
-    else:
-        input_tensors, target_tensors = import_data(
-            data_path, num_models, input_dim, output_dim)
-        train_dataloader, val_dataloader = get_dataloader(
-            num_models, input_tensors, target_tensors)
-        run(net, num_epochs, train_dataloader, val_dataloader,
-            opt, input_dim, output_dim, device)
+    input_tensors, target_tensors = import_data(
+        data_path, num_models, input_dim, output_dim)
+    train_dataloader, val_dataloader = get_dataloader(
+        num_models, input_tensors, target_tensors)
+    run(net, num_epochs, train_dataloader, val_dataloader,
+        opt, input_dim, output_dim, device)

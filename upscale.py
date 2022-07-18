@@ -38,7 +38,7 @@ def init_upscaler(input_dim, output_dim):
 
 
 if __name__ == '__main__':
-    net, opt = init_upscaler(
+    net = init_upscaler(
         input_dim=input_dim, output_dim=output_dim)
     net = net.to(device)
 

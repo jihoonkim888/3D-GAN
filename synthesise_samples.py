@@ -5,15 +5,15 @@ from src.GAN import Generator
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-dp', '--data_path', type=str, required=True)
+# parser.add_argument('-dp', '--data_path', type=str, required=True)
 parser.add_argument('-wp', '--weight_path', type=str, required=True)
-parser.add_argument('-se', '--weight_epoch', type=int, required=False)
+parser.add_argument('-we', '--weight_epoch', type=int, required=False)
 parser.add_argument('-sp', '--save_path', type=str, required=True)
 parser.add_argument('-n', '--n_samples', type=int, required=True)
 args = parser.parse_args()
 
 # argparse
-data_path = args.data_path
+# data_path = args.data_path
 weights_path = args.weight_path
 weight_epoch = args.weight_epoch if args.weight_epoch else None
 save_path = args.save_path

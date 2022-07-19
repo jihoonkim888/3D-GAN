@@ -17,6 +17,8 @@ parser.add_argument('-uwp', '--upscaler_weight_path', type=str, required=True)
 parser.add_argument('-uwe', '--upscaler_weight_epoch',
                     type=int, required=False)
 parser.add_argument('-sp', '--save_path', type=str, required=True)
+parser.add_argument('-gb', '--gen_batch_size', type=int, required=False)
+parser.add_argument('-ub', '--upscaler_batch_size', type=int, required=False)
 args = parser.parse_args()
 
 # argparse
@@ -32,8 +34,8 @@ dim = 64
 input_dim = 64
 output_dim = 256
 noise_dim = 200
-gen_b_size = 50
-upscaler_b_size = 2
+gen_b_size = args.gen_batch_size if args.gen_batch_size else 50
+upscaler_b_size = args.upscaler_batch_size if args.upscaler_batch_size else 2
 conv_channels = 256
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'

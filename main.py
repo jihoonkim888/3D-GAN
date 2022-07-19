@@ -19,6 +19,8 @@ parser.add_argument('-uwe', '--upscaler_weight_epoch',
 parser.add_argument('-sp', '--save_path', type=str, required=True)
 parser.add_argument('-gb', '--gen_batch_size', type=int, required=False)
 parser.add_argument('-ub', '--upscaler_batch_size', type=int, required=False)
+parser.add_argument('-v', '--visdom', type=bool, required=False)
+parser.add_argument('-p', '--port', type=int, required=True)
 args = parser.parse_args()
 
 # argparse
@@ -28,6 +30,8 @@ upscaler_weight_path = args.upscaler_weight_path
 upscaler_weight_epoch = args.upscaler_weight_epoch if args.upscaler_weight_epoch else None
 save_path = args.save_path
 n_samples = args.n_samples
+visdom = args.visdom if args.visdom else False
+port = args.port
 
 # parameters
 dim = 64
@@ -63,6 +67,16 @@ def find_weight_epoch(weight_path, weight_epoch):
         weights_available.sort()
         epoch = weights_available[-1]
     return epoch
+
+
+def getVFByMarchingCubes(voxels, threshold=0.5):
+    v, f = sk.marching_cubes(voxels, level=threshold, method='_lorensen')
+    return v, f
+
+
+def plotVoxelVisdom(voxels, visdom, title):
+    v, f = getVFByMarchingCubes(voxels)
+    visdom.mesh(X=v, Y=f, opts=dict(opacity=0.5, title=title))
 
 
 if __name__ == '__main__':
@@ -107,3 +121,13 @@ if __name__ == '__main__':
     with open(save_path, 'wb') as f:
         np.save(f, output)
     print('Output saved at', save_path)
+
+    if visdom:
+        import skimage.measure as sk
+        import visdom
+        vis = visdom.Visdom(port=port)
+
+        for i in tqdm(range(output.shape[0])):
+            a = output[i][0]
+            filename = 'Model '+str(i)
+            plotVoxelVisdom(a, vis, filename)

@@ -1,0 +1,107 @@
+import os
+import numpy as np
+import torch
+from src.GAN import Generator
+import argparse
+from src.upscaler import Upscaler
+import argparse
+from src import binvox_rw
+from tqdm.auto import tqdm
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-n', '--n_samples', type=int, required=True)
+parser.add_argument('-gwp', '--gen_weight_path', type=str, required=True)
+parser.add_argument('-gwe', '--gen_weight_epoch', type=int, required=False)
+parser.add_argument('-uwp', '--upscaler_weight_path', type=str, required=True)
+parser.add_argument('-uwe', '--upscaler_weight_epoch',
+                    type=int, required=False)
+parser.add_argument('-sp', '--save_path', type=str, required=True)
+args = parser.parse_args()
+
+# argparse
+gen_weight_path = args.gen_weight_path
+gen_weight_epoch = args.gen_weight_epoch if args.gen_weight_epoch else None
+upscaler_weight_path = args.upscaler_weight_path
+upscaler_weight_epoch = args.upscaler_weight_epoch if args.upscaler_weight_epoch else None
+save_path = args.save_path
+n_samples = args.n_samples
+
+# parameters
+dim = 64
+input_dim = 64
+output_dim = 256
+noise_dim = 200
+gen_b_size = 50
+upscaler_b_size = 2
+conv_channels = 256
+
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print('device:', device)
+
+
+def init_netG():
+    netG = Generator(in_channels=conv_channels, out_dim=dim,
+                     out_channels=1, noise_dim=noise_dim)
+    netG = netG.to(device)
+    return netG
+
+
+def init_upscaler(input_dim, output_dim):
+    net = Upscaler(input_dim=input_dim, output_dim=output_dim)
+    return net
+
+
+def find_weight_epoch(weight_path, weight_epoch):
+    if weight_epoch is not None:
+        epoch = weight_epoch
+    else:
+        weights_available = [i.strip('.pth').split('_')[-1]
+                             for i in os.listdir(weight_path)]
+        weights_available.sort()
+        epoch = weights_available[-1]
+    return epoch
+
+
+if __name__ == '__main__':
+    # Synthetic Shape Generation
+    netG = init_netG()
+    epoch = find_weight_epoch(gen_weight_path, gen_weight_epoch)
+    netG_filename = f'{gen_weight_path}/netG_r{dim}_{gen_weight_epoch}.pth'
+    print('Geneator weights to load:', netG_filename)
+    netG.load_state_dict(torch.load(netG_filename))
+    print('Geneator weights loaded')
+    noises = torch.randn(n_samples, noise_dim)
+    lst_samples = []
+    for noise in torch.split(noises, gen_b_size):
+        with torch.no_grad():
+            samples = netG(noise.to(device))
+            lst_samples.append(samples)
+    output = torch.cat(lst_samples)
+    print('Synthetic output shape:', output.shape)
+
+    torch.cuda.empty_cache()
+
+    # Upscaling
+    net = init_upscaler(
+        input_dim=input_dim, output_dim=output_dim)
+    net = net.to(device)
+    upscaler_weight_epoch = find_weight_epoch(
+        upscaler_weight_path, upscaler_weight_epoch)
+    net_filename = f'net_r{input_dim}_r{output_dim}_{upscaler_weight_epoch}.pth'
+    print('Upscaler weights to load:', net_filename)
+    net.load_state_dict(torch.load(
+        os.path.join(upscaler_weight_path, net_filename)))
+    print('Upscaler weights loaded')
+    lst_samples = []
+    for t in torch.split(output, upscaler_b_size):
+        with torch.no_grad():
+            samples = net(t.to(device))
+            lst_samples.append(samples)
+    output = torch.cat(lst_samples)
+    del lst_samples
+    output = output.cpu().numpy()
+    print('Output shape:', output.shape)
+    with open(save_path, 'wb') as f:
+        np.save(f, output)
+    print('Output saved at', save_path)

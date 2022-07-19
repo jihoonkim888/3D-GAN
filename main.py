@@ -66,7 +66,7 @@ def find_weight_epoch(weight_path, weight_epoch):
 if __name__ == '__main__':
     # Synthetic Shape Generation
     netG = init_netG()
-    epoch = find_weight_epoch(gen_weight_path, gen_weight_epoch)
+    gen_weight_epoch = find_weight_epoch(gen_weight_path, gen_weight_epoch)
     netG_filename = f'{gen_weight_path}/netG_r{dim}_{gen_weight_epoch}.pth'
     print('Geneator weights to load:', netG_filename)
     netG.load_state_dict(torch.load(netG_filename))

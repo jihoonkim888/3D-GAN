@@ -12,7 +12,7 @@ parser.add_argument('--save_folder', type=str, required=True,
                     help='Folder to save binvox files')
 parser.add_argument('--out_dim', nargs='+', required=True,
                     help='Output dimension of binvox files. Can be a single or multiple int for multiple output res')
-parser.add_argument('-n', '--num_samples', type=str, required=False,
+parser.add_argument('-n', '--num_samples', type=int, required=False,
                     help='Folder to save binvox files')
 
 args = parser.parse_args()

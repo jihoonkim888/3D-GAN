@@ -10,6 +10,7 @@ parser.add_argument('-wp', '--weight_path', type=str, required=True)
 parser.add_argument('-we', '--weight_epoch', type=int, required=False)
 parser.add_argument('-sp', '--save_path', type=str, required=True)
 parser.add_argument('-n', '--n_samples', type=int, required=True)
+parser.add_argument('-r', '--resolution', type=int, required=True)
 args = parser.parse_args()
 
 # argparse
@@ -18,7 +19,7 @@ weights_path = args.weight_path
 weight_epoch = args.weight_epoch if args.weight_epoch else None
 save_path = args.save_path
 n_samples = args.n_samples
-dim = 64
+dim = args.resolution
 noise_dim = 200
 b_size = 50
 conv_channels = 256

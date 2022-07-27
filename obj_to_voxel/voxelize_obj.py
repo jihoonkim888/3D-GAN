@@ -12,9 +12,13 @@ parser.add_argument('--save_folder', type=str, required=True,
                     help='Folder to save binvox files')
 parser.add_argument('--out_dim', nargs='+', required=True,
                     help='Output dimension of binvox files. Can be a single or multiple int for multiple output res')
+parser.add_argument('-n', '--num_samples', type=str, required=False,
+                    help='Folder to save binvox files')
 
 args = parser.parse_args()
 print(args)
+
+n = args.num_samples if args.num_samples else None
 
 # find the paths of all obj files
 
@@ -82,7 +86,10 @@ def remove_residual_binvox(obj_folder):
 if __name__ == '__main__':
     remove_residual_binvox(args.obj_folder)
     os.makedirs(args.save_folder, exist_ok=True)
-    lst_obj = find_obj(args.obj_folder)
+    if n is None:
+        lst_obj = find_obj(args.obj_folder)  # all the samples
+    else:
+        lst_obj = find_obj(args.obj_folder)[:n]
     print(len(lst_obj), 'obj files found from', args.obj_folder)
     convert(lst_obj, args.out_dim)
     print('Done!')

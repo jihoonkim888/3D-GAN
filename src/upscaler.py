@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchinfo import summary
+# from torchinfo import summary
 
 
 class Upscaler(nn.Module):
@@ -61,12 +61,12 @@ def BCELoss_w(output, target, weights=None, eps=1e-10):
     return torch.neg(torch.mean(loss))
 
 
-if __name__ == '__main__':
-    input_dim = 64
-    output_dim = 128
-    conv_channels = 64
+# if __name__ == '__main__':
+#     input_dim = 64
+#     output_dim = 128
+#     conv_channels = 64
 
-    input_size = (1, 1, input_dim, input_dim, input_dim)
-    ups = Upscaler(input_dim=input_dim, output_dim=output_dim,
-                   conv_channels=conv_channels)
-    summary(ups, input_size)
+#     input_size = (1, 1, input_dim, input_dim, input_dim)
+#     ups = Upscaler(input_dim=input_dim, output_dim=output_dim,
+#                    conv_channels=conv_channels)
+#     summary(ups, input_size)

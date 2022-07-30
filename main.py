@@ -20,7 +20,7 @@ parser.add_argument('-sp', '--save_path', type=str, required=True)
 parser.add_argument('-gb', '--gen_batch_size', type=int, required=False)
 parser.add_argument('-ub', '--upscaler_batch_size', type=int, required=False)
 parser.add_argument('-v', '--visdom', type=bool, required=False)
-parser.add_argument('-p', '--port', type=int, required=True)
+parser.add_argument('-p', '--port', type=int, required=False)
 args = parser.parse_args()
 
 # argparse
@@ -31,7 +31,7 @@ upscaler_weight_epoch = args.upscaler_weight_epoch if args.upscaler_weight_epoch
 save_path = args.save_path
 n_samples = args.n_samples
 visdom = args.visdom if args.visdom else False
-port = args.port
+port = args.port if args.port else None
 
 # parameters
 dim = 64

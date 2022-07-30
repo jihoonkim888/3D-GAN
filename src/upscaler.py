@@ -22,16 +22,17 @@ class Upscaler(nn.Module):
                                out_channels=self.up_conv1_channels, kernel_size=4, stride=2, padding=1),
             nn.ReLU(),
         )
-
-        self.up_conv2 = nn.Sequential(
-            nn.ConvTranspose3d(in_channels=self.up_conv1_channels,
-                               out_channels=in_channels, kernel_size=4, stride=2, padding=1),
-            nn.ReLU(),
-        )
+        if output_dim == 256:
+            self.up_conv2 = nn.Sequential(
+                nn.ConvTranspose3d(in_channels=self.up_conv1_channels,
+                                   out_channels=in_channels, kernel_size=4, stride=2, padding=1),
+                nn.ReLU(),
+            )
 
     def forward(self, x):
         x = self.up_conv1(x)
-        x = self.up_conv2(x)
+        if self.output_dim == 256:
+            x = self.up_conv2(x)
         return x
 
 

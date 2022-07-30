@@ -36,7 +36,7 @@ port = args.port if args.port else None
 # parameters
 dim = 64
 input_dim = 64
-output_dim = 256
+output_dim = 128
 noise_dim = 200
 gen_b_size = args.gen_batch_size if args.gen_batch_size else 50
 upscaler_b_size = args.upscaler_batch_size if args.upscaler_batch_size else 2

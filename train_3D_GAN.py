@@ -101,12 +101,10 @@ def init_GAN():
         netD = torch.nn.DataParallel(netD)
     netD = netD.to(device)
     netD.apply(weights_init)
-
-    criterion = torch.nn.BCELoss()
     # Setup Adam optimizers for both G and D
     optG = optim.Adam(netG.parameters(), lr=lr_G, betas=(beta1, 0.999))
     optD = optim.Adam(netD.parameters(), lr=lr_D, betas=(beta1, 0.999))
-
+    criterion = torch.nn.BCELoss()
     return netG, netD, optG, optD, criterion
 
 
@@ -182,7 +180,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 lst_errD_real_mini.append(errD_real.item())
                 errD_real.backward()
 
-                train_acc_real = np.sum((outD_real.detach().cpu().numpy() > 0.5).astype(
+                train_acc_real = np.sum((outD_real.tolist() > 0.5).astype(
                     int) == label_real) / mini_batch_size
                 lst_train_acc_real_mini.append(train_acc_real)
 
@@ -196,15 +194,13 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 lst_errD_fake_mini.append(errD_fake.item())
                 errD_fake.backward()
 
-                train_acc_fake = np.sum((outD_fake.detach().cpu().numpy() > 0.5).astype(
+                train_acc_fake = np.sum((outD_fake.tolist() > 0.5).astype(
                     int) == label_fake) / mini_batch_size
                 lst_train_acc_fake_mini.append(train_acc_fake)
             ## END OF MINI ##
 
             ### START OF BATCH ###
             # update D only if classification acc is less than 80% for stability
-            print('lst_train_acc_real_mini:', lst_train_acc_real_mini,
-                  'lst_train_acc_fake_mini:', lst_train_acc_fake_mini)
             lst_errD_fake_batch.append(np.mean(lst_errD_fake_mini))
             lst_errD_real_batch.append(np.mean(lst_errD_real_mini))
             lst_train_acc_real_batch.append(np.mean(lst_train_acc_real_mini))

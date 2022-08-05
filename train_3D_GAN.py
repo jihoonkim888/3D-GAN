@@ -160,6 +160,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
 
         ### START OF BATCH ###
         for data_all in dataloader:
+            ### START OF DISCRIMINATOR UPDATE ###
             data_split = torch.split(data_all, mini_batch_size)
 
             lst_errD_real_mini = []
@@ -219,8 +220,9 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             #       acc_fake_mean, 'update:', update)
             if update:
                 optD.step()
+            ### END OF DISCRIMINATOR UPDATE ###
 
-            # Generator
+            ### START OF GENERATOR UPDATE ###
             optG.zero_grad()
             ### END OF BATCH ###
 
@@ -236,9 +238,10 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             ## END OF MINI ##
 
             ### START OF BATCH ###
-            optG.step()
             lst_errG_batch.append(np.mean(lst_errG_mini))
+            optG.step()
             ### END OF BATCH ###
+            ### END OF GENERATOR UPDATE ###
 
         ##### START OF EPOCH #####
         G_losses.append(np.mean(lst_errG_batch))
@@ -246,6 +249,8 @@ def run(dataloader, netG, netD, optG, optD, criterion):
         D_fake_losses.append(np.mean(lst_errD_fake_batch))
         real_accuracies.append(np.mean(lst_train_acc_real_batch))
         fake_accuracies.append(np.mean(lst_train_acc_fake_batch))
+        print('lst_train_acc_real_batch:', lst_train_acc_real_batch,
+              'lst_train_acc_fake_batch:', lst_train_acc_fake_batch)
 
         print(f'[{epoch}/{num_epochs}]\tLoss_D_real: {round(D_real_losses[epoch], 4)}\tLoss_D_fake: {round(D_fake_losses[epoch], 4)}\tLoss_G: {round(G_losses[epoch], 4)}\tacc_D(x): {round(real_accuracies[epoch], 4)}\tacc_D(G(z)): {round(fake_accuracies[epoch], 4)}')
 

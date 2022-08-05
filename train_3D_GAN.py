@@ -168,6 +168,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             lst_errD_fake_mini = []
             lst_train_acc_real_mini = []
             lst_train_acc_fake_mini = []
+            lst_errG_mini = []
 
             optD.zero_grad()
             for real_data in data_split:
@@ -211,19 +212,16 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             lst_train_acc_real_batch.append(np.mean(lst_train_acc_real_mini))
             lst_train_acc_fake_batch.append(np.mean(lst_train_acc_fake_mini))
 
-        acc_real_mean = np.mean(lst_train_acc_real_batch)
-        acc_fake_mean = np.mean(lst_train_acc_fake_batch)
-        update = ((acc_real_mean + acc_fake_mean) / 2) < 0.8
-        print('acc_real:', acc_real_mean, 'acc_fake:',
-              acc_fake_mean, 'update:', update)
-        if update:
-            optD.step()
-        optD.zero_grad()
+            acc_real_mean = np.mean(lst_errD_real_mini)
+            acc_fake_mean = np.mean(lst_errD_fake_mini)
+            update = ((acc_real_mean + acc_fake_mean) / 2) < 0.8
+            print('acc_real:', acc_real_mean, 'acc_fake:',
+                  acc_fake_mean, 'update:', update)
+            if update:
+                optD.step()
+            optD.zero_grad()
 
-        for _ in range(len(dataloader)):
-            # BATCH
             # Generator
-            lst_errG_mini = []
             optG.zero_grad()
             for j in range(num_split):
                 label = torch.full((mini_batch_size,), real_label,

@@ -149,10 +149,8 @@ def run(dataloader, netG, netD, optG, optD, criterion):
     real_label = 1.
     fake_label = 0.
 
-    # Training Loop
-    print("Starting Training Loop...")
+    ##### START OF EPOCH #####
     for epoch in tqdm(range(num_epochs)):
-        ### EPOCH ###
         # append average of errors and accuracies after every epoch
         lst_errD_real_batch = []
         lst_errD_fake_batch = []
@@ -160,8 +158,8 @@ def run(dataloader, netG, netD, optG, optD, criterion):
         lst_train_acc_real_batch = []
         lst_train_acc_fake_batch = []
 
+        ### START OF BATCH ###
         for data_all in dataloader:
-            ### BATCH ###
             data_split = torch.split(data_all, mini_batch_size)
 
             lst_errD_real_mini = []
@@ -171,8 +169,8 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             lst_errG_mini = []
 
             optD.zero_grad()
+            ## START OF MINI ##
             for real_data in data_split:
-                ### MINI BATCH ###
                 # Discriminator on real data
                 real_data = real_data.to(device)
                 label_real = torch.full(
@@ -205,7 +203,9 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 train_acc_fake = np.sum((outD_fake.detach().cpu().numpy() > 0.5).astype(
                     int) == label_fake) / mini_batch_size
                 lst_train_acc_fake_mini.append(train_acc_fake)
+            ## END OF MINI ##
 
+            ### START OF BATCH ###
             # update D only if classification acc is less than 80% for stability
             lst_errD_fake_batch.append(np.mean(lst_errD_fake_mini))
             lst_errD_real_batch.append(np.mean(lst_errD_real_mini))
@@ -215,15 +215,17 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             acc_real_mean = np.mean(lst_errD_real_mini)
             acc_fake_mean = np.mean(lst_errD_fake_mini)
             update = ((acc_real_mean + acc_fake_mean) / 2) < 0.8
-            print('acc_real:', acc_real_mean, 'acc_fake:',
-                  acc_fake_mean, 'update:', update)
+            # print('acc_real:', acc_real_mean, 'acc_fake:',
+            #       acc_fake_mean, 'update:', update)
             if update:
                 optD.step()
-            optD.zero_grad()
 
             # Generator
             optG.zero_grad()
-            for j in range(num_split):
+            ### END OF BATCH ###
+
+            ## START OF MINI ##
+            for _ in range(num_split):
                 label = torch.full((mini_batch_size,), real_label,
                                    dtype=torch.float, device=device)
                 fake = netG(noise)
@@ -231,11 +233,14 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 errG = criterion(output, label) / num_split
                 errG.backward()
                 lst_errG_mini.append(errG.item())
+            ## END OF MINI ##
+
+            ### START OF BATCH ###
             optG.step()
-            optG.zero_grad()
-
             lst_errG_batch.append(np.mean(lst_errG_mini))
+            ### END OF BATCH ###
 
+        ##### START OF EPOCH #####
         G_losses.append(np.mean(lst_errG_batch))
         D_real_losses.append(np.mean(lst_errD_real_batch))
         D_fake_losses.append(np.mean(lst_errD_fake_batch))
@@ -256,6 +261,8 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             plot_convergence(G_losses, D_real_losses,
                              D_fake_losses, real_accuracies, fake_accuracies)
 
+        #### END OF EPOCH #####
+
     return
 
 
@@ -266,6 +273,11 @@ if __name__ == '__main__':
     # print("\n\nDiscriminator summary\n\n")
     # summary(netD, (mini_batch_size, 1, dim, dim, dim))
 
+    print("Importing real data...")
     input_tensors = import_data(data_path, num_models, dim)
+    print("Done!")
+    print("Initialising dataloader...")
     dataloader = get_dataloader(input_tensors)
+    print("Done!")
+    print("Starting Training Loop...")
     run(dataloader, netG, netD, optG, optD, criterion)

@@ -18,30 +18,16 @@ class Upscaler(nn.Module):
         self.up_conv1_channels = conv_channels
         self.up_conv2_channels = in_channels
 
-        if output_dim == 128:
-            self.up_conv1 = nn.Sequential(
-                nn.ConvTranspose3d(in_channels=self.in_channels,
-                                   out_channels=self.up_conv1_channels, kernel_size=4, stride=2, padding=1),
-                nn.ReLU(),
-            )
-
-            self.up_conv2 = nn.Sequential(
-                nn.ConvTranspose3d(in_channels=self.up_conv1_channels,
-                                   out_channels=in_channels, kernel_size=1, stride=1, padding=0),
-                nn.ReLU(),
-            )
-
-        elif output_dim == 256:
-            self.up_conv1 = nn.Sequential(
-                nn.ConvTranspose3d(in_channels=in_channels,
-                                   out_channels=self.up_conv1_channels, kernel_size=4, stride=2, padding=1),
-                nn.ReLU(),
-            )
-            self.up_conv2 = nn.Sequential(
-                nn.ConvTranspose3d(in_channels=self.up_conv1_channels,
-                                   out_channels=in_channels, kernel_size=4, stride=2, padding=1),
-                nn.ReLU(),
-            )
+        self.up_conv1 = nn.Sequential(
+            nn.ConvTranspose3d(in_channels=in_channels,
+                               out_channels=self.up_conv1_channels, kernel_size=4, stride=2, padding=1),
+            nn.ReLU(),
+        )
+        self.up_conv2 = nn.Sequential(
+            nn.ConvTranspose3d(in_channels=self.up_conv1_channels,
+                               out_channels=in_channels, kernel_size=4, stride=2, padding=1),
+            nn.ReLU(),
+        )
 
     def forward(self, x):
         x = self.up_conv1(x)

@@ -46,8 +46,6 @@ run_parallel = args.run_parallel if args.run_parallel else False
 k = int(batch_size / mini_batch_size)
 print('batch size:', batch_size, 'mini batch:', mini_batch_size, 'k:', k)
 
-convergence_filename = os.path.join('.', '3D_GAN_acc_plot.png')
-
 workers = 0
 # Set random seed for reproducibility
 manualSeed = 42
@@ -117,7 +115,7 @@ def init_GAN():
     return netG, netD, optG, optD, criterion
 
 
-def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies, filename):
+def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies):
     lst_epoch = np.array(range(int(num_epochs * num_models /
                          mini_batch_size))) / len(dataloader)
     plt.figure(figsize=(10, 5))
@@ -128,7 +126,7 @@ def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fa
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.legend()
-    filename = os.path.join('~', '3D_GAN_loss_plot.png')
+    filename = '3D_GAN_loss_plot.png'
     plt.savefig(filename, dpi=200)
     print('Loss plot saved to', filename)
 
@@ -140,6 +138,7 @@ def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fa
     plt.ylabel("Accuracy")
     plt.legend()
 
+    filename = '3D_GAN_acc_plot.png'
     plt.savefig(filename, dpi=200)
     print('Accuracy plot saved to', filename)
     return
@@ -283,4 +282,4 @@ if __name__ == '__main__':
     G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies = run(
         dataloader, netG, netD, optG, optD, criterion)
     plot_convergence(G_losses, D_real_losses, D_fake_losses,
-                     real_accuracies, fake_accuracies, convergence_filename)
+                     real_accuracies, fake_accuracies)

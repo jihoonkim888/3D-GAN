@@ -116,8 +116,7 @@ def init_GAN():
 
 
 def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies):
-    lst_epoch = np.array(range(int(num_epochs * num_models /
-                         mini_batch_size))) / len(dataloader)
+    lst_epoch = np.array(range(len(G_losses)))
     plt.figure(figsize=(10, 5))
     plt.title("Generator and Discriminator Loss During Training")
     plt.plot(lst_epoch, G_losses, label="G")
@@ -267,6 +266,9 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             torch.save(netD.state_dict(), netD_filename)
             print('saved network weights', netG_filename)
 
+            plot_convergence(G_losses, D_real_losses, D_fake_losses,
+                             real_accuracies, fake_accuracies)
+
     return G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies
 
 
@@ -281,5 +283,3 @@ if __name__ == '__main__':
     dataloader = get_dataloader(input_tensors)
     G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies = run(
         dataloader, netG, netD, optG, optD, criterion)
-    plot_convergence(G_losses, D_real_losses, D_fake_losses,
-                     real_accuracies, fake_accuracies)

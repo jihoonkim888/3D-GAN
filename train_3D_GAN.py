@@ -45,7 +45,7 @@ conv_channels = args.conv_channels if args.conv_channels else 256
 run_parallel = args.run_parallel if args.run_parallel else False
 num_split = int(batch_size / mini_batch_size)
 print('batch size:', batch_size, 'mini batch:',
-      mini_batch_size, 'k:', num_split)
+      mini_batch_size, 'num_split:', num_split)
 
 workers = 0
 # Set random seed for reproducibility
@@ -172,16 +172,12 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             optD.zero_grad()
             ## START OF MINI ##
             for real_data in data_split:
-                # Discriminator on real data
+                # Discriminator on real data #
                 real_data = real_data.to(device)
                 label_real = torch.full(
                     (mini_batch_size,), real_label, dtype=torch.float, device=device)
-                label_fake = torch.full(
-                    (mini_batch_size,), fake_label, dtype=torch.float, device=device)
 
                 outD_real = netD(real_data).view(-1)
-
-                # D_x = outD_real.mean().item()
                 errD_real = criterion(outD_real, label_real) / num_split
                 lst_errD_real_mini.append(errD_real.item())
                 errD_real.backward()
@@ -190,13 +186,12 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                     int) == label_real) / mini_batch_size
                 lst_train_acc_real_mini.append(train_acc_real)
 
-                # Update Discriminator with fake data generated from noise
+                # Update Discriminator with fake data generated from noise #
+                label_fake = torch.full(
+                    (mini_batch_size,), fake_label, dtype=torch.float, device=device)
                 noise = torch.randn(mini_batch_size, noise_dim, device=device)
-                with torch.no_grad():
-                    fake = netG(noise)
+                fake = netG(noise)
                 outD_fake = netD(fake).view(-1)
-
-                # D_G_z1 = outD_fake.mean().item()
                 errD_fake = criterion(outD_fake, label_fake) / num_split
                 lst_errD_fake_mini.append(errD_fake.item())
                 errD_fake.backward()
@@ -208,6 +203,8 @@ def run(dataloader, netG, netD, optG, optD, criterion):
 
             ### START OF BATCH ###
             # update D only if classification acc is less than 80% for stability
+            print('lst_train_acc_real_mini:', lst_train_acc_real_mini,
+                  'lst_train_acc_fake_mini:', lst_train_acc_fake_mini)
             lst_errD_fake_batch.append(np.mean(lst_errD_fake_mini))
             lst_errD_real_batch.append(np.mean(lst_errD_real_mini))
             lst_train_acc_real_batch.append(np.mean(lst_train_acc_real_mini))
@@ -216,8 +213,6 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             acc_real_mean = np.mean(lst_errD_real_mini)
             acc_fake_mean = np.mean(lst_errD_fake_mini)
             update = ((acc_real_mean + acc_fake_mean) / 2) < 0.8
-            # print('acc_real:', acc_real_mean, 'acc_fake:',
-            #       acc_fake_mean, 'update:', update)
             if update:
                 optD.step()
             ### END OF DISCRIMINATOR UPDATE ###

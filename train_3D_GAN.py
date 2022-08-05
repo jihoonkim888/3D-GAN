@@ -139,7 +139,6 @@ def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fa
 
 
 def run(dataloader, netG, netD, optG, optD, criterion):
-
     # Lists to keep track of progress
     G_losses = []
     D_real_losses = []
@@ -161,18 +160,17 @@ def run(dataloader, netG, netD, optG, optD, criterion):
         lst_train_acc_real_batch = []
         lst_train_acc_fake_batch = []
 
-        for i, data_all in enumerate(dataloader):
+        for data_all in dataloader:
             ### BATCH ###
             data_split = torch.split(data_all, mini_batch_size)
 
             lst_errD_real_mini = []
             lst_errD_fake_mini = []
-            lst_errG_mini = []
             lst_train_acc_real_mini = []
             lst_train_acc_fake_mini = []
 
             optD.zero_grad()
-            for j, real_data in enumerate(data_split):
+            for real_data in data_split:
                 ### MINI BATCH ###
                 # Discriminator on real data
                 real_data = real_data.to(device)
@@ -208,14 +206,24 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 lst_train_acc_fake_mini.append(train_acc_fake)
 
             # update D only if classification acc is less than 80% for stability
-            acc_real_mean = np.mean(lst_train_acc_real_mini)
-            acc_fake_mean = np.mean(lst_train_acc_fake_mini)
-            update = ((acc_real_mean + acc_fake_mean) / 2) < 0.8
-            if update:
-                optD.step()
-            optD.zero_grad()
+            lst_errD_fake_batch.append(np.mean(lst_errD_fake_mini))
+            lst_errD_real_batch.append(np.mean(lst_errD_real_mini))
+            lst_train_acc_real_batch.append(np.mean(lst_train_acc_real_mini))
+            lst_train_acc_fake_batch.append(np.mean(lst_train_acc_fake_mini))
 
+        acc_real_mean = np.mean(lst_train_acc_real_batch)
+        acc_fake_mean = np.mean(lst_train_acc_fake_batch)
+        update = ((acc_real_mean + acc_fake_mean) / 2) < 0.8
+        print('acc_real:', acc_real_mean, 'acc_fake:',
+              acc_fake_mean, 'update:', update)
+        if update:
+            optD.step()
+        optD.zero_grad()
+
+        for _ in range(len(dataloader)):
+            # BATCH
             # Generator
+            lst_errG_mini = []
             optG.zero_grad()
             for j in range(num_split):
                 label = torch.full((mini_batch_size,), real_label,
@@ -229,10 +237,6 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             optG.zero_grad()
 
             lst_errG_batch.append(np.mean(lst_errG_mini))
-            lst_errD_fake_batch.append(np.mean(lst_errD_fake_mini))
-            lst_errD_real_batch.append(np.mean(lst_errD_real_mini))
-            lst_train_acc_real_batch.append(acc_real_mean)
-            lst_train_acc_fake_batch.append(acc_fake_mean)
 
         G_losses.append(np.mean(lst_errG_batch))
         D_real_losses.append(np.mean(lst_errD_real_batch))

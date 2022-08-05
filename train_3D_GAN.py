@@ -116,7 +116,7 @@ def init_GAN():
 
 
 def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies):
-    lst_epoch = np.array(range(len(G_losses)))
+    lst_epoch = np.array(range(len(G_losses))) / batch_size
     plt.figure(figsize=(10, 5))
     plt.title("Generator and Discriminator Loss During Training")
     plt.plot(lst_epoch, G_losses, label="G")

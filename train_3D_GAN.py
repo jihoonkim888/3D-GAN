@@ -221,8 +221,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 label = torch.full((mini_batch_size,), real_label,
                                    dtype=torch.float, device=device)
                 fake = netG(noise)
-                with torch.no_grad():
-                    output = netD(fake).view(-1)
+                output = netD(fake).view(-1)
                 errG = criterion(output, label) / num_split
                 errG.backward()
                 lst_errG_mini.append(errG.item())

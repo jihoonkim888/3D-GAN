@@ -180,7 +180,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 lst_errD_real_mini.append(errD_real.item())
                 errD_real.backward()
 
-                train_acc_real = np.sum((outD_real.tolist() > 0.5).astype(
+                train_acc_real = np.sum((outD_real.detach().cpu().numpy() > 0.5).astype(
                     int) == label_real) / mini_batch_size
                 lst_train_acc_real_mini.append(train_acc_real)
 
@@ -194,7 +194,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 lst_errD_fake_mini.append(errD_fake.item())
                 errD_fake.backward()
 
-                train_acc_fake = np.sum((outD_fake.tolist() > 0.5).astype(
+                train_acc_fake = np.sum((outD_fake.detach().cpu().numpy() > 0.5).astype(
                     int) == label_fake) / mini_batch_size
                 lst_train_acc_fake_mini.append(train_acc_fake)
             ## END OF MINI ##

@@ -41,7 +41,7 @@ def convert(lst_files, out_dim):
             for file in tqdm(lst_files):
                 full_path = os.path.join(file)
                 # -e option gives better results somehow, especially with thin parts of an object
-                cmd = f'./binvox -c -d {res} -rotx {full_path}'
+                cmd = f'./binvox -c -d {res} -rotx -e {full_path}'
                 _ = subprocess.check_output(cmd, shell=True)
 
             lst_binvox = find_binvox(args.obj_folder)

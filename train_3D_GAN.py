@@ -118,9 +118,11 @@ def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fa
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.legend()
+
     filename = '3D_GAN_loss_plot.png'
     plt.savefig(filename, dpi=200)
     print('Loss plot saved to', filename)
+    plt.close()
 
     plt.figure(figsize=(10, 5))
     plt.title("Discriminator Accuracies During Training")
@@ -133,6 +135,8 @@ def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fa
     filename = '3D_GAN_acc_plot.png'
     plt.savefig(filename, dpi=200)
     print('Accuracy plot saved to', filename)
+    plt.close()
+
     return
 
 

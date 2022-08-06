@@ -198,8 +198,8 @@ def run(dataloader, netG, netD, optG, optD, criterion):
 
             ### START OF BATCH ###
             # update D only if classification acc is less than 80% for stability
-            lst_errD_fake_batch.append(np.mean(lst_errD_fake_mini))
-            lst_errD_real_batch.append(np.mean(lst_errD_real_mini))
+            lst_errD_fake_batch.append(np.sum(lst_errD_fake_mini))
+            lst_errD_real_batch.append(np.sum(lst_errD_real_mini))
             lst_train_acc_real_batch.append(np.mean(lst_train_acc_real_mini))
             lst_train_acc_fake_batch.append(np.mean(lst_train_acc_fake_mini))
 
@@ -232,13 +232,13 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             ### END OF GENERATOR UPDATE ###
 
         ##### START OF EPOCH #####
-        G_losses.append(np.mean(lst_errG_batch))
-        D_real_losses.append(np.mean(lst_errD_real_batch))
-        D_fake_losses.append(np.mean(lst_errD_fake_batch))
+        G_losses.append(np.sum(lst_errG_batch))
+        D_real_losses.append(np.sum(lst_errD_real_batch))
+        D_fake_losses.append(np.sum(lst_errD_fake_batch))
         real_accuracies.append(np.mean(lst_train_acc_real_batch))
         fake_accuracies.append(np.mean(lst_train_acc_fake_batch))
-        print('lst_train_acc_real_batch:', lst_train_acc_real_batch,
-              'lst_train_acc_fake_batch:', lst_train_acc_fake_batch)
+        # print('lst_train_acc_real_batch:', lst_train_acc_real_batch,
+        #       'lst_train_acc_fake_batch:', lst_train_acc_fake_batch)
 
         print(f'[{epoch}/{num_epochs}]\tLoss_D_real: {round(D_real_losses[epoch], 4)}\tLoss_D_fake: {round(D_fake_losses[epoch], 4)}\tLoss_G: {round(G_losses[epoch], 4)}\tacc_D(x): {round(real_accuracies[epoch], 4)}\tacc_D(G(z)): {round(fake_accuracies[epoch], 4)}')
 

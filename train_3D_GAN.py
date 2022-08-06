@@ -177,8 +177,8 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 lst_errD_real_mini.append(errD_real.item())
                 errD_real.backward()
 
-                train_acc_real = torch.sum((outD_real > 0.5).to(
-                    int) == label_real) / mini_batch_size
+                train_acc_real = (torch.sum((outD_real > 0.5).to(
+                    int) == label_real) / mini_batch_size).item()
                 lst_train_acc_real_mini.append(train_acc_real)
 
                 # Update Discriminator with fake data generated from noise #
@@ -191,8 +191,8 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 lst_errD_fake_mini.append(errD_fake.item())
                 errD_fake.backward()
 
-                train_acc_fake = torch.sum((outD_fake > 0.5).to(
-                    int) == label_fake) / mini_batch_size
+                train_acc_fake = (torch.sum((outD_fake > 0.5).to(
+                    int) == label_fake) / mini_batch_size).item()
                 lst_train_acc_fake_mini.append(train_acc_fake)
             ## END OF MINI ##
 

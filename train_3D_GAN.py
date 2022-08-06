@@ -144,9 +144,6 @@ def run(dataloader, netG, netD, optG, optD, criterion):
     real_accuracies = []
     fake_accuracies = []
 
-    real_label = 1.
-    fake_label = 0.
-
     ##### START OF EPOCH #####
     for epoch in tqdm(range(num_epochs)):
         # append average of errors and accuracies after every epoch
@@ -173,20 +170,20 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 # Discriminator on real data #
                 real_data = real_data.to(device)
                 label_real = torch.full(
-                    (mini_batch_size,), real_label, dtype=torch.float, device=device)
+                    (mini_batch_size,), 1.0, dtype=torch.float, device=device)
 
                 outD_real = netD(real_data).view(-1)
                 errD_real = criterion(outD_real, label_real) / num_split
                 lst_errD_real_mini.append(errD_real.item())
                 errD_real.backward()
 
-                train_acc_real = np.sum((outD_real.detach().cpu().numpy() > 0.5).astype(
+                train_acc_real = torch.sum((outD_real > 0.5).to(
                     int) == label_real) / mini_batch_size
                 lst_train_acc_real_mini.append(train_acc_real)
 
                 # Update Discriminator with fake data generated from noise #
                 label_fake = torch.full(
-                    (mini_batch_size,), fake_label, dtype=torch.float, device=device)
+                    (mini_batch_size,), 0.0, dtype=torch.float, device=device)
                 noise = torch.randn(mini_batch_size, noise_dim, device=device)
                 fake = netG(noise)
                 outD_fake = netD(fake).view(-1)
@@ -194,7 +191,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 lst_errD_fake_mini.append(errD_fake.item())
                 errD_fake.backward()
 
-                train_acc_fake = np.sum((outD_fake.detach().cpu().numpy() > 0.5).astype(
+                train_acc_fake = torch.sum((outD_fake > 0.5).to(
                     int) == label_fake) / mini_batch_size
                 lst_train_acc_fake_mini.append(train_acc_fake)
             ## END OF MINI ##
@@ -219,7 +216,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
 
             ## START OF MINI ##
             for _ in range(num_split):
-                label = torch.full((mini_batch_size,), real_label,
+                label = torch.full((mini_batch_size,), 1.0,
                                    dtype=torch.float, device=device)
                 fake = netG(noise)
                 output = netD(fake).view(-1)

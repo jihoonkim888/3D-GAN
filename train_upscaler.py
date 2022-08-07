@@ -128,41 +128,45 @@ def init_upscaler(input_dim, output_dim):
 
 def run(net, num_epochs, train_dataloader, val_dataloader, opt, input_dim, output_dim, device, start_epoch=0):
     os.makedirs(weights_path, exist_ok=True)
+    criterion = torch.nn.BCELoss()
     # Training Loop
     print("Starting Training Loop...")
-    lst_loss = []
-    lst_val_loss = []
     # For each epoch
     for epoch in tqdm(range(start_epoch, start_epoch+num_epochs)):
         # For each batch in the dataloader
+        lst_loss_batch  = []
+        lst_val_loss_batch = []
         for i, (input_data, target_data) in enumerate(train_dataloader):  # batch
             opt.zero_grad()  # make sure no grad recorded on opt before the start of epoch
             input_data_split = torch.split(input_data, mini_batch_size)
             target_data_split = torch.split(target_data, mini_batch_size)
+            # for each mini batch
+            lst_loss_mini = []
             for j in range(len(input_data_split)):
                 input_data_batch = input_data_split[j].to(device)
                 target_data_batch = target_data_split[j].to(device)
                 output = net(input_data_batch)
-                err = BCELoss_w(output, target_data_batch,
-                                weights=[1-alpha, alpha])
-                lst_loss.append(err.item())
+                #err = BCELoss_w(output, target_data_batch,
+                #                weights=[1-alpha, alpha])
+                err = criterion(output, target_data_batch) / len(input_data_split)
+                lst_loss_mini.append(err.item())
                 err.backward()  # err grad to opt
             opt.step()
-            # opt.zero_grad()
+            opt.zero_grad()
+            lst_loss_batch.append(np.sum(lst_loss_mini))
 
             # validation
             val_input, val_target = next(iter(val_dataloader))
             val_input = val_input.to(device)
             with torch.no_grad():
                 val_output = net(val_input)
-                val_err = BCELoss_w(val_output, val_target.to(
-                    device), weights=[alpha, 1-alpha])
-                lst_val_loss.append(val_err.item())
+                #val_err = BCELoss_w(val_output, val_target.to(
+                #    device), weights=[alpha, 1-alpha])
+                val_err = criterion(val_output, val_target.to(device))
+                lst_val_loss_batch.append(val_err.item())
 
-            # Output training stats at the end of epoch
-            if i % 20 == 0:
-                print(
-                    f'[{epoch}/{num_epochs}] [{i}/{len(train_dataloader)}]\tLoss: {round(err.item(), 4)}\tVal loss: {round(val_err.item(), 4)}')
+        # Output training stats at the end of epoch
+        print(f'[{epoch}/{num_epochs}]\tLoss: {round(np.mean(lst_loss_batch), 4)}\tVal loss: {round(np.mean(lst_val_loss_batch), 4)}')
 
         if epoch % 5 == 0 and epoch != 0:
             # plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies)

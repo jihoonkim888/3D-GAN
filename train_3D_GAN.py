@@ -156,6 +156,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
         lst_errG_batch = []
         lst_train_acc_real_batch = []
         lst_train_acc_fake_batch = []
+        lst_update = []
 
         ### START OF BATCH ###
         for data_all in dataloader:
@@ -181,6 +182,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 errD_real.backward()
                 lst_errD_real_mini.append(errD_real.item())
 
+                # D acc for real samples
                 train_acc_real = (torch.sum((outD_real > 0.5).to(
                     int) == label_real) / mini_batch_size).item()
                 lst_train_acc_real_mini.append(train_acc_real)
@@ -195,6 +197,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 errD_fake.backward()
                 lst_errD_fake_mini.append(errD_fake.item())
 
+                # D acc for samples from G
                 train_acc_fake = (torch.sum((outD_fake > 0.5).to(
                     int) == label_fake) / mini_batch_size).item()
                 lst_train_acc_fake_mini.append(train_acc_fake)
@@ -210,6 +213,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             acc_real_mean = np.mean(lst_train_acc_real_mini)
             acc_fake_mean = np.mean(lst_train_acc_fake_mini)
             update = ((acc_real_mean + acc_fake_mean) / 2) < 0.8
+            lst_update.append(update)
             if update:
                 optD.step()
             optD.zero_grad()
@@ -217,7 +221,6 @@ def run(dataloader, netG, netD, optG, optD, criterion):
 
             ### START OF GENERATOR UPDATE ###
             optG.zero_grad()
-            ### END OF BATCH ###
 
             ## START OF MINI ##
             for _ in range(num_split):
@@ -247,7 +250,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
         # print('lst_train_acc_real_batch:', lst_train_acc_real_batch,
         #       'lst_train_acc_fake_batch:', lst_train_acc_fake_batch)
 
-        print(f'[{epoch}/{num_epochs}]\tLoss_D_real: {round(D_real_losses[epoch], 4)}\tLoss_D_fake: {round(D_fake_losses[epoch], 4)}\tLoss_G: {round(G_losses[epoch], 4)}\tacc_D(x): {round(real_accuracies[epoch], 4)}\tacc_D(G(z)): {round(fake_accuracies[epoch], 4)}\tupdate: {update}')
+        print(f'[{epoch}/{num_epochs}]\tLoss_D_real: {round(D_real_losses[epoch], 4)}\tLoss_D_fake: {round(D_fake_losses[epoch], 4)}\tLoss_G: {round(G_losses[epoch], 4)}\tacc_D(x): {round(real_accuracies[epoch], 4)}\tacc_D(G(z)): {round(fake_accuracies[epoch], 4)}\tupdate: {np.sum(lst_update)}/{len(lst_update)}')
 
         # save net weights every 5 epochs
         if epoch % 5 == 0 and epoch != 0:

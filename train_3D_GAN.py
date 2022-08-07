@@ -207,8 +207,8 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             lst_train_acc_real_batch.append(np.mean(lst_train_acc_real_mini))
             lst_train_acc_fake_batch.append(np.mean(lst_train_acc_fake_mini))
 
-            acc_real_mean = np.mean(lst_errD_real_mini)
-            acc_fake_mean = np.mean(lst_errD_fake_mini)
+            acc_real_mean = np.mean(lst_train_acc_real_mini)
+            acc_fake_mean = np.mean(lst_train_acc_fake_mini)
             print('acc_real_mean:', acc_real_mean,
                   'acc_fake_mean:', acc_fake_mean)
             update = ((acc_real_mean + acc_fake_mean) / 2) < 0.8

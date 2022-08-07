@@ -178,8 +178,8 @@ def run(dataloader, netG, netD, optG, optD, criterion):
 
                 outD_real = netD(real_data).view(-1)
                 errD_real = criterion(outD_real, label_real) / num_split
-                lst_errD_real_mini.append(errD_real.item())
                 errD_real.backward()
+                lst_errD_real_mini.append(errD_real.item())
 
                 train_acc_real = (torch.sum((outD_real > 0.5).to(
                     int) == label_real) / mini_batch_size).item()
@@ -189,11 +189,11 @@ def run(dataloader, netG, netD, optG, optD, criterion):
                 label_fake = torch.full(
                     (mini_batch_size,), 0.0, dtype=torch.float, device=device)
                 noise = torch.randn(mini_batch_size, noise_dim, device=device)
-                fake = netG(noise)
+                fake = netG(noise).detach()
                 outD_fake = netD(fake).view(-1)
                 errD_fake = criterion(outD_fake, label_fake) / num_split
-                lst_errD_fake_mini.append(errD_fake.item())
                 errD_fake.backward()
+                lst_errD_fake_mini.append(errD_fake.item())
 
                 train_acc_fake = (torch.sum((outD_fake > 0.5).to(
                     int) == label_fake) / mini_batch_size).item()
@@ -223,6 +223,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             for _ in range(num_split):
                 label = torch.full((mini_batch_size,), 1.0,
                                    dtype=torch.float, device=device)
+                noise = torch.randn(mini_batch_size, noise_dim, device=device)
                 fake = netG(noise)
                 output = netD(fake).view(-1)
                 errG = criterion(output, label) / num_split

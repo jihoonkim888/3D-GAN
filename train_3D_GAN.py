@@ -247,7 +247,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
         # print('lst_train_acc_real_batch:', lst_train_acc_real_batch,
         #       'lst_train_acc_fake_batch:', lst_train_acc_fake_batch)
 
-        print(f'[{epoch}/{num_epochs}]\tLoss_D_real: {round(D_real_losses[epoch], 4)}\tLoss_D_fake: {round(D_fake_losses[epoch], 4)}\tLoss_G: {round(G_losses[epoch], 4)}\tacc_D(x): {round(real_accuracies[epoch], 4)}\tacc_D(G(z)): {round(fake_accuracies[epoch], 4)}')
+        print(f'[{epoch}/{num_epochs}]\tLoss_D_real: {round(D_real_losses[epoch], 4)}\tLoss_D_fake: {round(D_fake_losses[epoch], 4)}\tLoss_G: {round(G_losses[epoch], 4)}\tacc_D(x): {round(real_accuracies[epoch], 4)}\tacc_D(G(z)): {round(fake_accuracies[epoch], 4)}\tupdate: {update}')
 
         # save net weights every 5 epochs
         if epoch % 5 == 0 and epoch != 0:

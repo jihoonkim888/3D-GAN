@@ -212,6 +212,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             update = ((acc_real_mean + acc_fake_mean) / 2) < 0.8
             if update:
                 optD.step()
+            optD.zero_grad()
             ### END OF DISCRIMINATOR UPDATE ###
 
             ### START OF GENERATOR UPDATE ###
@@ -232,6 +233,7 @@ def run(dataloader, netG, netD, optG, optD, criterion):
             ### START OF BATCH ###
             lst_errG_batch.append(np.mean(lst_errG_mini))
             optG.step()
+            optG.zero_grad()
             ### END OF BATCH ###
             ### END OF GENERATOR UPDATE ###
 

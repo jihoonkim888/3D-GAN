@@ -209,6 +209,8 @@ def run(dataloader, netG, netD, optG, optD, criterion):
 
             acc_real_mean = np.mean(lst_errD_real_mini)
             acc_fake_mean = np.mean(lst_errD_fake_mini)
+            print('acc_real_mean:', acc_real_mean,
+                  'acc_fake_mean:', acc_fake_mean)
             update = ((acc_real_mean + acc_fake_mean) / 2) < 0.8
             if update:
                 optD.step()

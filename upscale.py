@@ -24,8 +24,8 @@ args = parser.parse_args()
 data_path = args.data_path
 weights_path = args.weight_path
 save_path = args.save_path
-input_dim = 64
-output_dim = 256
+input_dim = 32
+output_dim = 128
 weight_epoch = args.weight_epoch if args.weight_epoch else None
 b_size = 2
 

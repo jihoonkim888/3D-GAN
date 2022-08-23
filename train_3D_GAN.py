@@ -120,7 +120,7 @@ def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fa
     plt.legend()
 
     filename = '3D_GAN_loss_plot.png'
-    plt.savefig(filename, dpi=200)
+    plt.savefig(os.path.join(weights_path, filename), dpi=200)
     print('Loss plot saved to', filename)
     plt.close()
 
@@ -133,7 +133,7 @@ def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fa
     plt.legend()
 
     filename = '3D_GAN_acc_plot.png'
-    plt.savefig(filename, dpi=200)
+    plt.savefig(os.path.join(weights_path, filename), dpi=200)
     print('Accuracy plot saved to', filename)
     plt.close()
 

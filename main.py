@@ -26,6 +26,7 @@ gen_weight_epoch = args.gen_weight_epoch if args.gen_weight_epoch else None
 upscaler_weight_path = args.upscaler_weight_path
 upscaler_weight_epoch = args.upscaler_weight_epoch if args.upscaler_weight_epoch else None
 save_path = args.save_path
+os.makedirs(save_path, exist_ok=True)
 n_samples = args.n_samples
 
 # parameters

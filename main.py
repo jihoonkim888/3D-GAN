@@ -4,9 +4,8 @@ import torch
 from src.GAN import Generator
 import argparse
 from src.upscaler import Upscaler
-import argparse
-from src import binvox_rw
 from tqdm.auto import tqdm
+import matplotlib.pyplot as plt
 
 
 parser = argparse.ArgumentParser()
@@ -19,8 +18,6 @@ parser.add_argument('-uwe', '--upscaler_weight_epoch',
 parser.add_argument('-sp', '--save_path', type=str, required=True)
 parser.add_argument('-gb', '--gen_batch_size', type=int, required=False)
 parser.add_argument('-ub', '--upscaler_batch_size', type=int, required=False)
-parser.add_argument('-v', '--visdom', type=bool, required=False)
-parser.add_argument('-p', '--port', type=int, required=False)
 args = parser.parse_args()
 
 # argparse
@@ -30,15 +27,13 @@ upscaler_weight_path = args.upscaler_weight_path
 upscaler_weight_epoch = args.upscaler_weight_epoch if args.upscaler_weight_epoch else None
 save_path = args.save_path
 n_samples = args.n_samples
-visdom = args.visdom if args.visdom else False
-port = args.port if args.port else None
 
 # parameters
-dim = 64
-input_dim = 64
+dim = 32
+input_dim = 32
 output_dim = 128
 noise_dim = 200
-gen_b_size = args.gen_batch_size if args.gen_batch_size else 50
+gen_b_size = args.gen_batch_size if args.gen_batch_size else 20
 upscaler_b_size = args.upscaler_batch_size if args.upscaler_batch_size else 2
 conv_channels = 256
 
@@ -69,16 +64,6 @@ def find_weight_epoch(weight_path, weight_epoch):
     return epoch
 
 
-def getVFByMarchingCubes(voxels, threshold=0.5):
-    v, f = sk.marching_cubes(voxels, level=threshold, method='_lorensen')
-    return v, f
-
-
-def plotVoxelVisdom(voxels, visdom, title):
-    v, f = getVFByMarchingCubes(voxels)
-    visdom.mesh(X=v, Y=f, opts=dict(opacity=0.5, title=title))
-
-
 if __name__ == '__main__':
     # Synthetic Shape Generation
     netG = init_netG()
@@ -94,7 +79,19 @@ if __name__ == '__main__':
             samples = netG(noise.to(device))
             lst_samples.append(samples)
     output = torch.cat(lst_samples)
+    del lst_samples
     print('Synthetic output shape:', output.shape)
+
+    arr = output.cpu().numpy()
+    for i in tqdm(range(arr.shape[0])):
+        v = arr[i][0] > 0.1
+        ax = plt.figure(figsize=(20, 20)).add_subplot(projection='3d')
+        ax.voxels(v)
+        filename = f'model_{str(i).zfill(4)}_32'
+        plt.savefig(os.path.join(save_path, filename), dpi=200)
+        plt.close()
+
+    print(f'{input_dim} plot done!')
 
     torch.cuda.empty_cache()
 
@@ -116,18 +113,15 @@ if __name__ == '__main__':
             lst_samples.append(samples)
     output = torch.cat(lst_samples)
     del lst_samples
-    output = output.cpu().numpy()
-    print('Output shape:', output.shape)
-    with open(save_path, 'wb') as f:
-        np.save(f, output)
-    print('Output saved at', save_path)
+    arr = output.cpu().numpy()
+    print('Output shape:', arr.shape)
 
-    if visdom:
-        import skimage.measure as sk
-        import visdom
-        vis = visdom.Visdom(port=port)
+    for i in tqdm(range(arr.shape[0])):
+        v = arr[i][0] > 0.1
+        ax = plt.figure(figsize=(20, 20)).add_subplot(projection='3d')
+        ax.voxels(v)
+        filename = f'model_{str(i).zfill(4)}_128_ups'
+        plt.savefig(os.path.join(save_path, filename), dpi=200)
+        plt.close()
 
-        for i in tqdm(range(output.shape[0])):
-            a = output[i][0]
-            filename = 'Model '+str(i)
-            plotVoxelVisdom(a, vis, filename)
+    print(f'{output_dim} plot done!')

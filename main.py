@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
     arr = output.cpu().numpy()
     for i in tqdm(range(arr.shape[0])):
-        v = arr[i][0] > 0.1
+        v = arr[i][0] > 0.3
         ax = plt.figure(figsize=(20, 20)).add_subplot(projection='3d')
         ax.voxels(v)
         filename = f'model_{str(i).zfill(4)}_32'
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     print('Output shape:', arr.shape)
 
     for i in tqdm(range(arr.shape[0])):
-        v = arr[i][0] > 0.1
+        v = arr[i][0] > 0
         ax = plt.figure(figsize=(20, 20)).add_subplot(projection='3d')
         ax.voxels(v)
         filename = f'model_{str(i).zfill(4)}_128_ups'

@@ -58,7 +58,7 @@ def find_weight_epoch(weight_path, weight_epoch):
     if weight_epoch is not None:
         epoch = weight_epoch
     else:
-        weights_available = [i.strip('.pth').split('_')[-1]
+        weights_available = [int(i.strip('.pth').split('_')[-1])
                              for i in os.listdir(weight_path)]
         weights_available.sort()
         epoch = weights_available[-1]

@@ -111,7 +111,7 @@ def init_GAN():
 def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fake_accuracies):
     lst_epoch = np.array(range(len(G_losses)))
     plt.figure(figsize=(10, 5))
-    plt.title("Generator and Discriminator Loss During Training")
+    plt.title(f"G and D Loss res={dim} lrg={lr_G} lrd={lr_D}")
     plt.plot(lst_epoch, G_losses, label="G")
     plt.plot(lst_epoch, D_real_losses, label="D_real")
     plt.plot(lst_epoch, D_fake_losses, label="D_fake")
@@ -119,21 +119,21 @@ def plot_convergence(G_losses, D_real_losses, D_fake_losses, real_accuracies, fa
     plt.ylabel("Loss")
     plt.legend()
 
-    filename = '3D_GAN_loss_plot.png'
-    plt.savefig(os.path.join(weights_path, filename), dpi=200)
+    filename = os.path.join(weights_path, '3D_GAN_loss_plot.png')
+    plt.savefig(filename, dpi=200)
     print('Loss plot saved to', filename)
     plt.close()
 
     plt.figure(figsize=(10, 5))
-    plt.title("Discriminator Accuracies During Training")
+    plt.title(f"D Acc res={dim} lrg={lr_G} lrd={lr_D}")
     plt.plot(lst_epoch, real_accuracies, label="acc_real")
     plt.plot(lst_epoch, fake_accuracies, label="acc_fake")
     plt.xlabel("Epoch")
     plt.ylabel("Accuracy")
     plt.legend()
 
-    filename = '3D_GAN_acc_plot.png'
-    plt.savefig(os.path.join(weights_path, filename), dpi=200)
+    filename = os.path.join(weights_path, '3D_GAN_acc_plot.png')
+    plt.savefig(filename, dpi=200)
     print('Accuracy plot saved to', filename)
     plt.close()
 

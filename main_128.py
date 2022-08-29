@@ -12,19 +12,13 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-n', '--n_samples', type=int, required=True)
 parser.add_argument('-gwp', '--gen_weight_path', type=str, required=True)
 parser.add_argument('-gwe', '--gen_weight_epoch', type=int, required=False)
-parser.add_argument('-uwp', '--upscaler_weight_path', type=str, required=True)
-parser.add_argument('-uwe', '--upscaler_weight_epoch',
-                    type=int, required=False)
 parser.add_argument('-sp', '--save_path', type=str, required=True)
 parser.add_argument('-gb', '--gen_batch_size', type=int, required=False)
-parser.add_argument('-ub', '--upscaler_batch_size', type=int, required=False)
 args = parser.parse_args()
 
 # argparse
 gen_weight_path = args.gen_weight_path
 gen_weight_epoch = args.gen_weight_epoch if args.gen_weight_epoch else None
-upscaler_weight_path = args.upscaler_weight_path
-upscaler_weight_epoch = args.upscaler_weight_epoch if args.upscaler_weight_epoch else None
 save_path = args.save_path
 os.makedirs(save_path, exist_ok=True)
 n_samples = args.n_samples
@@ -33,7 +27,6 @@ n_samples = args.n_samples
 dim = 128
 noise_dim = 200
 gen_b_size = args.gen_batch_size if args.gen_batch_size else 20
-upscaler_b_size = args.upscaler_batch_size if args.upscaler_batch_size else 2
 conv_channels = 256
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -45,11 +38,6 @@ def init_netG():
                      out_channels=1, noise_dim=noise_dim)
     netG = netG.to(device)
     return netG
-
-
-def init_upscaler(input_dim, output_dim):
-    net = Upscaler(input_dim=input_dim, output_dim=output_dim)
-    return net
 
 
 def find_weight_epoch(weight_path, weight_epoch):

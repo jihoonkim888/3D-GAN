@@ -29,6 +29,9 @@ noise_dim = 200
 gen_b_size = args.gen_batch_size if args.gen_batch_size else 20
 conv_channels = 256
 
+elev = 30
+azim = 135
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print('device:', device)
 
@@ -73,6 +76,7 @@ if __name__ == '__main__':
     for i in tqdm(range(arr.shape[0])):
         v = arr[i][0] > 0.3
         ax = plt.figure(figsize=(20, 20)).add_subplot(projection='3d')
+        ax.view_init(elev, azim)
         ax.voxels(v)
         filename = f'model_{str(i).zfill(4)}_128'
         plt.savefig(os.path.join(save_path, filename), dpi=200)

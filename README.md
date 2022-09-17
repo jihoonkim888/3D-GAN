@@ -1,5 +1,9 @@
 # 3D-GAN
 
+![Airplane models generated using 3D-GAN](https://user-images.githubusercontent.com/68455855/190845159-ffd73ed7-ce47-4062-89ab-b699f2ca4740.png)
+![Upsampled models](https://user-images.githubusercontent.com/68455855/190845160-4442ebed-a851-4e19-ad73-710d875daca2.png)
+
+
 This repository contains the code implementation of the 3D-GAN and the up-convolutional network that are used to generate synthetic samples and upsample low-resolution samples, respectively.
 
 ## Root
